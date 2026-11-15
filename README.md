@@ -1,5 +1,7 @@
 # AEO Check
 
+[![CI](https://github.com/rsasaki0109/ai_search_engine_optimization/actions/workflows/ci.yml/badge.svg)](https://github.com/rsasaki0109/ai_search_engine_optimization/actions/workflows/ci.yml)
+
 ![AEO Checkの操作デモ：URL入力から技術診断、スコアと優先順位つき改善案の確認まで](docs/hero.gif)
 
 <p align="center"><sub>サンプルHTMLを使用した操作デモ。実際のアプリ画面と診断ロジックで生成しています。</sub></p>
@@ -96,6 +98,22 @@ python3 -m unittest discover -s tests -v
 node --check static/app.js
 node --test tests/history.test.cjs tests/report.test.cjs
 ```
+
+## 自動テスト（GitHub Actions）
+
+push・PRでPython 3.12/3.13の単体テスト、Node.js 22のJavaScript構文・履歴・レポートテストを実行します。別ジョブでChromiumによる履歴・比較・一括診断・Markdown保存・PDF生成を検証します。診断対象は固定HTMLのテストデータを使用し、外部サイトやAPIキーに依存しません。
+
+ブラウザ検証をローカルでも実行する場合：
+
+```bash
+python3 -m pip install -r requirements-browser.txt
+python3 -m playwright install --with-deps chromium
+CHROMIUM_EXECUTABLE= python3 tests/browser_history.py
+CHROMIUM_EXECUTABLE= python3 tests/browser_report.py
+CHROMIUM_EXECUTABLE= python3 tests/browser_batch.py
+```
+
+PDF検証には `pdftotext`（Ubuntuでは `poppler-utils`）が必要です。日本語表示にはNoto CJKなどの日本語フォントを使用してください。`CHROMIUM_EXECUTABLE` を指定しない場合は `/usr/bin/chromium`、空文字の場合はPlaywright付属のChromiumを使います。これらの開発用依存はアプリの起動には不要です。
 
 ## 運用範囲
 

@@ -1,6 +1,7 @@
 """Optional batch QA: playwright + /usr/bin/chromium required. Local fixtures only."""
 from pathlib import Path
 import json
+import os
 import sys
 import threading
 from unittest.mock import patch
@@ -23,7 +24,7 @@ def main():
     threading.Thread(target=server.serve_forever,daemon=True).start()
     try:
         with patch('app.fetch',side_effect=fixture),sync_playwright() as p:
-            browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+            browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE', '/usr/bin/chromium') or None,args=['--no-sandbox'])
             page=browser.new_page(viewport={'width':1280,'height':900},accept_downloads=True)
             errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
             calls=[];page.on('request',lambda r:calls.append(r.url) if '/api/audit' in r.url else None)

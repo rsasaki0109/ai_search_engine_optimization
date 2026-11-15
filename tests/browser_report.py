@@ -4,6 +4,7 @@ Run: python3 tests/browser_report.py. Uses local fixtures only.
 from pathlib import Path
 import json
 import subprocess
+import os
 import sys
 import tempfile
 import threading
@@ -24,7 +25,7 @@ def main():
     saved = [dict(at='2026-11-15T02:00:00Z',report=report), dict(at='2026-11-14T02:00:00Z',report=old), dict(at='2026-11-13T02:00:00Z',report=unrelated)]
     try:
         with tempfile.TemporaryDirectory() as temp, sync_playwright() as p:
-            browser=p.chromium.launch(executable_path='/usr/bin/chromium',args=['--no-sandbox'])
+            browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_EXECUTABLE', '/usr/bin/chromium') or None,args=['--no-sandbox'])
             page=browser.new_page(viewport={'width':1280,'height':900}, accept_downloads=True)
             errors=[];page.on('pageerror', lambda e:errors.append(str(e)))
             page.route('https://fonts.googleapis.com/**',lambda r:r.abort())
