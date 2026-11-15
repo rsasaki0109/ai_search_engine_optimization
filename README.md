@@ -1,5 +1,9 @@
 # AEO Check
 
+![AEO Checkの操作デモ：URL入力から技術診断、スコアと優先順位つき改善案の確認まで](docs/hero.gif)
+
+<p align="center"><sub>サンプルHTMLを使用した操作デモ。実際のアプリ画面と診断ロジックで生成しています。</sub></p>
+
 URLから、AI検索に向けたページの技術設定を診断するMVP。Python 3.12以上の標準ライブラリだけで動作します。APIキー不要。
 
 ```bash
@@ -39,3 +43,13 @@ node --check static/app.js
 ## 運用範囲
 
 ローカル利用向けの開発サーバーです。履歴・認証・課金・定期実行は含みません。インターネットへ公開する際は、リバースプロキシ、認証、レート制限、リクエストの同時実行制限を追加してください。Google Fontsを使用し、読み込めない場合はシステムフォントへ切り替わります。
+
+## READMEデモの再生成
+
+開発用に `playwright` と `pillow` をインストールし、Chromiumが `/usr/bin/chromium` にある環境で実行します。アプリ本体にはこれらの依存は不要です。
+
+```bash
+python3 tools/create_hero.py
+```
+
+実際のUIを操作し、固定のサンプルHTMLを診断した結果から `docs/hero.gif` を生成します。外部サイトへのアクセスは行いません。
