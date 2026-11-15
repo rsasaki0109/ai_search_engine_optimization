@@ -31,6 +31,36 @@ class AuditTests(unittest.TestCase):
         self.assertFalse(next(c for c in result['checks'] if c['id'] == 'schema')['passed'])
         self.assertEqual(result['excerpt'], '')
 
+    def test_failed_checks_have_actionable_templates(self):
+        result = app.analyze(self.page('<meta name="robots" content="noindex">'))
+        self.assertEqual(len(result['checks']), 9)
+        for check in result['checks']:
+            self.assertFalse(check['passed'])
+            self.assertTrue(check['repair']['location'])
+            self.assertTrue(check['repair']['note'])
+        index = next(c for c in result['checks'] if c['id'] == 'index')
+        self.assertIsNone(index['repair']['code'])
+        self.assertIn('X-Robots-Tag', index['repair']['note'])
+
+    def test_schema_template_escapes_script_end_and_preserves_title(self):
+        title = '&lt;/script&gt;&lt;img src=x onerror=alert(1)&gt;'
+        result = app.analyze(self.page(f'<title>{title}</title>'))
+        code = next(c for c in result['checks'] if c['id'] == 'schema')['repair']['code']
+        self.assertEqual(code.count('</script>'), 1)
+        schema = json.loads(code.split('>\n', 1)[1].rsplit('\n</script>', 1)[0])
+        self.assertEqual(schema['name'], '</script><img src=x onerror=alert(1)>')
+        self.assertEqual(schema['@type'], 'WebPage')
+
+    def test_canonical_template_quotes_url_and_removes_fragment(self):
+        page = dict(self.page('<html></html>'), url='https://example.com/a?q="x"&page=2#section')
+        checks = app.analyze(page)['checks']
+        code = next(c for c in checks if c['id'] == 'canonical')['repair']['code']
+        self.assertIn('q=&quot;x&quot;&amp;page=2', code)
+        self.assertNotIn('#section', code)
+
+    def test_passed_checks_do_not_recommend_edits(self):
+        self.assertTrue(all('repair' not in c for c in app.analyze(self.page())['checks']))
+
     def test_invalid_urls(self):
         for url in [None, 'file:///etc/passwd', 'https://user:pass@example.com', 'http://example.com:8080', 'https://example.com/\nfoo']:
             with self.subTest(url=url), self.assertRaises(ValueError): app.validate_url(url)

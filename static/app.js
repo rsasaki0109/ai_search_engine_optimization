@@ -1,6 +1,34 @@
 const $ = id => document.getElementById(id);
 let report;
 function el(tag, text, cls) { const n = document.createElement(tag); n.textContent = text; if (cls) n.className = cls; return n; }
+function repairPanel(repair) {
+  const panel = el('details', '', 'repair');
+  panel.append(el('summary', '修正例と適用方法を見る'));
+  const top = el('div', '', 'repair-top');
+  top.append(el('span', repair.location));
+  panel.append(top, el('p', repair.note, 'repair-note'));
+  if (repair.code) {
+    const code = el('code', repair.code);
+    const pre = el('pre', ''); pre.append(code); panel.append(pre);
+    const copy = el('button', 'コードをコピー', 'secondary');
+    copy.type = 'button';
+    copy.setAttribute('aria-label', `${repair.location}の修正例をコピー`);
+    const status = el('span', '', 'copy-status');
+    status.setAttribute('role', 'status');
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(repair.code);
+        status.textContent = 'コピーしました';
+      } catch {
+        const range = document.createRange(); range.selectNodeContents(code);
+        const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+        status.textContent = '自動コピーできませんでした。選択したコードを手動でコピーしてください。';
+      }
+    });
+    const controls = el('div', '', 'copy-controls'); controls.append(copy, status); panel.append(controls);
+  }
+  return panel;
+}
 $('audit-form').addEventListener('submit', async event => {
   event.preventDefault();
   $('submit').disabled = true;
@@ -23,7 +51,9 @@ $('audit-form').addEventListener('submit', async event => {
     failed.forEach((c,i) => {
       const row = el('article', '', 'recommendation');
       row.append(el('span', `${String(i+1).padStart(2,'0')} · ${c.weight >= 15 ? '優先度 高' : '優先度 中'}`, 'priority'));
-      const body = el('div', ''); body.append(el('h3', c.label), el('p', c.action)); row.append(body); $('recommendations').append(row);
+      const body = el('div', '', 'recommendation-body'); body.append(el('h3', c.label), el('p', c.action));
+      if (c.repair) body.append(repairPanel(c.repair));
+      row.append(body); $('recommendations').append(row);
     });
     $('checks').replaceChildren();
     data.checks.forEach(c => {

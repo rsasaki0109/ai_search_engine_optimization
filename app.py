@@ -7,6 +7,7 @@ import re
 import socket
 import time
 from html.parser import HTMLParser
+from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit, urljoin
@@ -118,6 +119,29 @@ class Page(HTMLParser):
         if not self.skip and not self.in_title: self.text.append(data)
 
 
+def repair_example(key, parser, page):
+    """Templates stay explicit about editorial choices and deployment scope."""
+    title = parser.title.strip() or '【ページの主題が伝わるタイトルに置換】'
+    url = urlunsplit(urlsplit(page['url'])._replace(fragment=''))
+    schema = json.dumps({'@context': 'https://schema.org', '@type': 'WebPage',
+                         'name': title, 'url': url}, ensure_ascii=False, indent=2)
+    # JSON embedded in a script element must not terminate the element.
+    schema = schema.replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
+    examples = {
+        'title': ('HTML / <head>', '<title>【ページの主題】｜【サイト名】</title>', '【】内を実際の内容に置き換えてください。'),
+        'description': ('HTML / <head>', '<meta name="description" content="【このページで答える問いと、読者が得られる情報を簡潔に記入】">', 'ページに書かれている内容を要約してください。'),
+        'h1': ('HTML / <body>', f'<h1>{escape(title)}</h1>', '既存のH1が複数ある場合は見出し階層を整理し、ページの主題を1つにまとめてください。'),
+        'headings': ('HTML / 本文', '<h2>【読者の問い・節の主題】</h2>\n<p>【問いへの答えを最初に記入】</p>', '実際の内容に置き換え、既存の見出し階層に合わせてください。'),
+        'content': ('HTML / 本文', '<main>\n  <h1>【ページの主題】</h1>\n  <p>【主な説明と具体的な根拠】</p>\n</main>', '既存のmainやH1に統合してください。JavaScriptでのみ表示している本文はSSRや静的生成でHTMLに含めてください。'),
+        'schema': ('HTML / <head>', '<script type="application/ld+json">\n' + schema + '\n</script>', '汎用WebPageのひな形です。name・urlを確認し、既存データが壊れている場合は修正してください。内容に応じた型・項目を追加し、Schema Markup Validatorで検証してください。'),
+        'canonical': ('HTML / <head>', f'<link rel="canonical" href="{escape(url, quote=True)}">', '取得後のURLを候補として表示しています。クエリを含め、実際に正規化したい公開URLへ修正してください。'),
+        'language': ('HTML / 開始タグ', '<html lang="ja">', '既存のhtmlタグに統合してください。jaは日本語の例です。本文の言語に合わせて変更してください。'),
+        'index': ('公開設定 / 手動確認', None, '公開する意図を確認してから、meta robotsとHTTPレスポンスのX-Robots-Tagのnoindex / noneを見直してください。HTTPヘッダーはHTMLの変更だけでは解除できません。'),
+    }
+    location, code, note = examples[key]
+    return dict(location=location, code=code, note=note)
+
+
 def analyze(page, robots=None, robots_error=None):
     parser = Page()
     parser.feed(page['body'])
@@ -146,6 +170,9 @@ def analyze(page, robots=None, robots_error=None):
         for bot in BOTS:
             bots.append({'name': bot, 'allowed': rp.can_fetch(bot, page['url']), 'purpose': '学習用' if bot == 'GPTBot' else '検索・ユーザー取得'})
     score = round(sum(c['weight'] for c in checks if c['passed']) / sum(c['weight'] for c in checks) * 100)
+    for check in checks:
+        if not check['passed']:
+            check['repair'] = repair_example(check['id'], parser, page)
     return dict(url=page['url'], title=parser.title.strip(), score=score, checks=checks, bots=bots, robots_error=robots_error, headings=parser.headings[:30], excerpt=content[:500], note='独自の技術チェック指標です。AI検索での引用率や掲載を測定・保証するものではありません。JSON-LDは構文のみ確認し、型・必須項目の妥当性は未検証です。')
 
 
