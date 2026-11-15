@@ -16,6 +16,11 @@ from urllib.robotparser import RobotFileParser
 ROOT = Path(__file__).parent
 LIMIT = 2_000_000
 BOTS = ['OAI-SearchBot', 'ChatGPT-User', 'PerplexityBot', 'Googlebot', 'GPTBot']
+ANALYSIS_VERSION = '2'
+
+
+def reject_json_constant(value):
+    raise ValueError(f'{value} is not valid JSON')
 
 
 def validate_url(url):
@@ -78,6 +83,7 @@ class Page(HTMLParser):
         self.canonical = ''
         self.lang = ''
         self.schemas = []
+        self.schema_errors = {}
         self.text = []
         self.images = 0
         self.alt = 0
@@ -103,8 +109,11 @@ class Page(HTMLParser):
 
     def handle_endtag(self, tag):
         if tag == 'script' and self.json_data is not None:
-            try: self.schemas.append(json.loads(self.json_data))
-            except (ValueError, TypeError): self.schemas.append(None)
+            try:
+                self.schemas.append(json.loads(self.json_data, parse_constant=reject_json_constant))
+            except (ValueError, TypeError, RecursionError):
+                self.schema_errors[len(self.schemas)] = 'JSONの構文を解析できません。深すぎるJSONも対象です。'
+                self.schemas.append(None)
             self.json_data = None
         if tag in ('script', 'style', 'noscript', 'template'): self.skip = max(0, self.skip - 1)
         if tag == 'title': self.in_title = False
@@ -117,6 +126,101 @@ class Page(HTMLParser):
         if self.in_title: self.title += data
         if self.heading and not self.skip: self.heading[1] += data
         if not self.skip and not self.in_title: self.text.append(data)
+
+
+def inspect_schemas(parser):
+    """Bounded structural inspection, not JSON-LD expansion or vocabulary validation."""
+    details = []
+    context_budget = [0]
+    schema_contexts = {'http://schema.org', 'https://schema.org', 'http://schema.org/', 'https://schema.org/'}
+    def context(value, vocab, prefixes, depth=0):
+        context_budget[0] += 1
+        if depth > 60 or context_budget[0] > 2000:
+            raise ValueError('@contextが解析上限を超えました。手動で検証してください。')
+        prefixes = dict(prefixes)
+        if isinstance(value, list):
+            for part in value:
+                vocab, prefixes = context(part, vocab, prefixes, depth + 1)
+        elif value is None:
+            vocab, prefixes = False, {}
+        elif isinstance(value, str):
+            # Other remote contexts are deliberately not fetched or expanded.
+            if value not in schema_contexts:
+                raise ValueError('独自・外部@contextは展開できません。手動で検証してください。')
+            vocab = True
+        elif isinstance(value, dict):
+            if '@vocab' in value:
+                vocab = value['@vocab'] in schema_contexts if isinstance(value['@vocab'], str) else False
+            for key, target in value.items():
+                if key.startswith('@'): continue
+                if isinstance(target, dict) and target.get('@prefix') is False:
+                    prefixes.pop(key, None)
+                    continue
+                target = target.get('@id') if isinstance(target, dict) else target
+                if isinstance(target, str) and target in schema_contexts:
+                    prefixes[key] = True
+                else:
+                    prefixes.pop(key, None)
+        else:
+            raise ValueError('@contextは文字列・オブジェクト・配列・nullのいずれかにしてください。')
+        return vocab, prefixes
+
+    for index, document in enumerate(parser.schemas):
+        context_budget[0] = 0
+        types, issues = set(), []
+        if index in parser.schema_errors:
+            issues.append(parser.schema_errors[index])
+        elif not isinstance(document, (dict, list)) or not document:
+            issues.append('ルートには空でないオブジェクトまたは配列が必要です。')
+        else:
+            stack = [(document, False, {}, 0, True)]
+            visited = 0
+            while stack:
+                node, vocab, prefixes, depth, root = stack.pop()
+                visited += 1
+                if depth > 60 or visited > 2000:
+                    issues.append('解析上限（深さ60・要素2000）に達しました。手動で検証してください。')
+                    break
+                if isinstance(node, list):
+                    stack.extend((child, vocab, prefixes, depth + 1, root) for child in node)
+                    continue
+                if not isinstance(node, dict):
+                    if root: issues.append('ルートや@graph内の要素はオブジェクトである必要があります。')
+                    continue
+                if '@context' in node:
+                    try:
+                        vocab, prefixes = context(node['@context'], vocab, prefixes)
+                    except ValueError as error:
+                        issues.append(str(error))
+                        vocab, prefixes = False, {}
+                if '@type' in node:
+                    declared = node['@type'] if isinstance(node['@type'], list) else [node['@type']]
+                    if not declared or any(not isinstance(t, str) or not t.strip() for t in declared):
+                        issues.append('@typeは空でない文字列または文字列配列にしてください。')
+                    for item in declared:
+                        if not isinstance(item, str): continue
+                        name = None
+                        for base in schema_contexts:
+                            if base.endswith('/') and item.startswith(base): name = item[len(base):]
+                        if ':' in item and not item.startswith(('http:', 'https:')):
+                            prefix, local = item.split(':', 1)
+                            if prefixes.get(prefix): name = local
+                        elif ':' not in item and vocab:
+                            name = item
+                        if name and re.fullmatch(r'[A-Za-z][A-Za-z0-9]*', name):
+                            types.add(name)
+                        else:
+                            issues.append('@typeをSchema.orgとして解釈できません。@contextや型の指定を手動で確認してください。')
+                for key, child in node.items():
+                    if key == '@context': continue
+                    if key == '@graph' and not isinstance(child, (dict, list)):
+                        issues.append('@graphはオブジェクトまたは配列にしてください。')
+                    if isinstance(child, (dict, list)):
+                        stack.append((child, vocab, prefixes, depth + 1, key == '@graph'))
+            if not types:
+                issues.append('Schema.orgの@typeを検出できませんでした。独自・外部contextの展開は行いません。')
+        details.append(dict(block=index + 1, types=sorted(types), issues=list(dict.fromkeys(issues)), passed=bool(types) and not issues))
+    return details
 
 
 def repair_example(key, parser, page):
@@ -156,8 +260,11 @@ def analyze(page, robots=None, robots_error=None):
     add('h1', '主題を示す見出し', len(h1) == 1 and bool(h1[0]), f'H1: {len(h1)}件', '主題を明確に示すH1を1つ設ける。')
     add('headings', '本文の構造', any(h[0] == 'h2' and h[1].strip() for h in parser.headings), f'H2: {sum(h[0] == "h2" for h in parser.headings)}件', '内容をH2で整理し、各節の冒頭に端的な答えを書く。')
     add('content', '取得可能な本文', len(content) >= 200, f'本文テキスト: {len(content)}文字', '主な説明をサーバーから返すHTMLに含める。短いページでは内容に応じて判断する。', 15)
-    valid = [s for s in parser.schemas if isinstance(s, (dict, list)) and s]
-    add('schema', '構造化データ', bool(valid), f'JSON-LD: {len(valid)}件、解析エラー: {sum(s is None for s in parser.schemas)}件', '内容に合うArticle / OrganizationなどのJSON-LDを追加し、検証ツールで確認する。', 15)
+    schema_details = inspect_schemas(parser)
+    types = sorted({t for item in schema_details for t in item['types']})
+    schema_passed = bool(schema_details) and all(item['passed'] for item in schema_details)
+    evidence = f'JSON-LD: {len(schema_details)}件、要確認: {sum(not item["passed"] for item in schema_details)}件。型: {", ".join(types) or "未検出"}'
+    add('schema', '構造化データ', schema_passed, evidence, '詳細の問題点を確認し、既存JSON-LDの@context・@type・構文を修正する。未設定なら内容に合うJSON-LDを追加する。', 15)
     add('canonical', '正規URL', bool(parser.canonical), parser.canonical or '未設定', '重複ページの扱いを明確にするcanonical URLを設定する。')
     add('language', 'ページ言語', bool(parser.lang.strip()), parser.lang or 'lang属性なし', 'html要素のlang属性を設定する（日本語ならja）。', 5)
     directives = parser.meta.get('robots', '') + ',' + page.get('robots_header', '')
@@ -173,7 +280,7 @@ def analyze(page, robots=None, robots_error=None):
     for check in checks:
         if not check['passed']:
             check['repair'] = repair_example(check['id'], parser, page)
-    return dict(url=page['url'], title=parser.title.strip(), score=score, checks=checks, bots=bots, robots_error=robots_error, headings=parser.headings[:30], excerpt=content[:500], note='独自の技術チェック指標です。AI検索での引用率や掲載を測定・保証するものではありません。JSON-LDは構文のみ確認し、型・必須項目の妥当性は未検証です。')
+    return dict(analysis_version=ANALYSIS_VERSION, schema_details=schema_details, url=page['url'], title=parser.title.strip(), score=score, checks=checks, bots=bots, robots_error=robots_error, headings=parser.headings[:30], excerpt=content[:500], note='独自の技術チェック指標です。AI検索での引用率や掲載を測定・保証するものではありません。JSON-LDは構文とSchema.orgのcontext・型指定を基本確認します。型の実在・必須項目・リッチリザルト適合は未検証です。外部contextは展開しません。')
 
 
 def audit(url):

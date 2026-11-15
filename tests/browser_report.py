@@ -16,7 +16,7 @@ import app
 def main():
     server = app.ThreadingHTTPServer(('127.0.0.1',0), app.Handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
-    sample = dict(url='https://example.com/guide', body='<html lang="ja"><title>Report Demo</title><h1>Report Demo</h1><p>PRIVATE_EXCERPT_MARKER</p></html>', robots_header='')
+    sample = dict(url='https://example.com/guide', body='<html lang="ja"><title>Report Demo</title><h1>Report Demo</h1><p>PRIVATE_EXCERPT_MARKER</p><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article"},{"@type":"Organization"}]}</script><script type="application/ld+json">broken</script></html>', robots_header='')
     report = app.analyze(sample, 'User-agent: *\nAllow: /')
     old = json.loads(json.dumps(report)); old['score'] -= 10
     next(c for c in old['checks'] if c['id']=='title')['passed'] = False
@@ -33,12 +33,16 @@ def main():
             page.reload()
             page.locator('.history-row').first.get_by_role('button',name='結果を見る',exact=True).click()
             expect(page.locator('#comparison')).to_contain_text('+10 点')
+            expect(page.locator('.schema-card')).to_have_count(2)
+            expect(page.locator('.schema-card').first).to_contain_text('Article、Organization')
+            expect(page.locator('.schema-card').nth(1)).to_contain_text('JSONの構文を解析できません')
             with page.expect_download() as capture: page.locator('#download-markdown').click()
             downloaded=capture.value
             assert downloaded.suggested_filename=='aeo-report.md'
             text=Path(downloaded.path()).read_text()
             assert '2026\\-11\\-15T02:00:00Z' in text
             assert '**+10 点**' in text and '```html' in text
+            assert '## 構造化データの詳細' in text and 'Article' in text
             assert 'PRIVATE_EXCERPT_MARKER' not in text and 'PRIVATE_OTHER_HISTORY' not in text
             with page.expect_download() as capture: page.locator('#download').click()
             assert json.loads(Path(capture.value.path()).read_text())==report
@@ -50,6 +54,7 @@ def main():
             pdftext=subprocess.check_output(['pdftotext',f'{temp}/report.pdf','-']).decode()
             assert 'Report Demo' in pdftext and 'application/ld+json' in pdftext
             assert '2026/11/15' in pdftext
+            assert 'Article' in pdftext and 'Organization' in pdftext
             assert 'PRIVATE_EXCERPT_MARKER' not in pdftext and 'PRIVATE_OTHER_HISTORY' not in pdftext
             page.evaluate('() => { window.print = () => { window.printCalled = true; }; }')
             page.locator('#print-report').click()
@@ -57,6 +62,15 @@ def main():
             for width in [375,320]:
                 page.set_viewport_size({'width':width,'height':850})
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            # Legacy records remain viewable but cannot be compared to new criteria.
+            legacy=json.loads(json.dumps(old));legacy.pop('analysis_version');legacy.pop('schema_details')
+            page.evaluate('(rows)=>localStorage.setItem(AEOHistory.KEY,JSON.stringify(rows))', [saved[0],dict(at=saved[1]['at'],report=legacy)])
+            page.reload()
+            page.locator('.history-row').first.get_by_role('button',name='結果を見る',exact=True).click()
+            expect(page.locator('#comparison')).to_contain_text('判定基準')
+            expect(page.locator('#comparison')).not_to_contain_text('+10 点')
+            page.locator('.history-row').nth(1).get_by_role('button',name='結果を見る',exact=True).click()
+            expect(page.locator('#schema-section')).to_be_hidden()
             # Deleting history must clear comparison from both screen and export.
             page.locator('#clear-history').click()
             with page.expect_download() as capture: page.locator('#download-markdown').click()

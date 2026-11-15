@@ -101,6 +101,7 @@ function renderReport(data, prior, at) {
     const card = el('article', '', `check ${c.passed ? '' : 'fail'}`);
     card.append(el('span', c.passed ? '✓ 確認済み' : '要確認', 'state'), el('h3', c.label), el('p', c.evidence)); $('checks').append(card);
   });
+  renderSchemaDetails(data);
   $('bots').replaceChildren();
   data.bots.forEach(bot => { const card = el('article', '', 'bot'); card.append(el('b', bot.name), el('span', bot.allowed ? '✓ ルール上は許可' : '× ルール上は制限'), el('small', bot.purpose)); $('bots').append(card); });
   $('robots-note').hidden = !data.robots_error;
@@ -138,7 +139,7 @@ function renderComparison(data, prior) {
   if (!diff) return;
   container.append(el('h2', '前回との比較'), el('p', `${new Date(prior.at).toLocaleString('ja-JP')} の診断から`, 'hint'));
   if (!diff.compatible) {
-    container.append(el('p', '診断項目または配点が異なるため、スコアを比較できません。'));
+    container.append(el('p', '判定基準・診断項目・配点のいずれかが異なるため、スコアを比較できません。'));
     return;
   }
   container.append(el('strong', `${diff.delta > 0 ? '+' : ''}${diff.delta} 点`, diff.delta < 0 ? 'score-delta negative' : 'score-delta'));
@@ -183,3 +184,21 @@ $('clear-history').addEventListener('click', () => {
   $('status').textContent = storageNote || '診断履歴を削除しました。';
 });
 renderHistory();
+
+function renderSchemaDetails(data) {
+  const list = $('schema-details'); list.replaceChildren();
+  $('schema-section').hidden = !Array.isArray(data.schema_details);
+  if (!Array.isArray(data.schema_details)) return;
+  if (!data.schema_details.length) {
+    list.append(el('p', 'JSON-LDを検出できませんでした。HTMLに含まれる構造化データだけを対象にしています。', 'notice'));
+  }
+  data.schema_details.forEach(item => {
+    const card = el('article', '', 'schema-card');
+    card.append(el('h3', `JSON-LD #${item.block} · ${item.passed ? '基本確認を通過' : '要確認'}`));
+    card.append(el('p', `検出した型：${item.types.join('、') || 'なし'}`));
+    if (item.issues.length) {
+      const issues = el('ul', ''); item.issues.forEach(issue => issues.append(el('li', issue))); card.append(issues);
+    }
+    list.append(card);
+  });
+}

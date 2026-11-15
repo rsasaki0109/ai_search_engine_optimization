@@ -47,3 +47,12 @@ test('handles passed audits and unknown robots without fake allow status', () =>
   assert.ok(md.includes('アクセス設定は不明'));
   assert.ok(!md.includes('```html'));
 });
+test('exports structured-data findings and analysis version', () => {
+  const r=report();r.analysis_version='2';
+  r.schema_details=[{block:1,passed:false,types:['Article'],issues:['@contextを確認']}];
+  const md=markdown(r,options);
+  assert.ok(md.includes('判定基準バージョン: 2'));
+  assert.ok(md.includes('## 構造化データの詳細'));
+  assert.ok(md.includes('検出した型: Article'));
+  assert.ok(md.includes('@contextを確認'));
+});

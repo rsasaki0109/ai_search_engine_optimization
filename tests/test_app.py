@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 import app
 
-HTML = '''<html lang="ja"><head><title>診断サンプル</title><meta name="description" content="概要"><link rel="canonical" href="https://example.com/a"><script type="application/ld+json">{"@type":"Article"}</script></head><body><h1>主題</h1><h2>回答</h2><p>''' + '正確な説明と出典。' * 40 + '</p></body></html>'
+HTML = '''<html lang="ja"><head><title>診断サンプル</title><meta name="description" content="概要"><link rel="canonical" href="https://example.com/a"><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article"}</script></head><body><h1>主題</h1><h2>回答</h2><p>''' + '正確な説明と出典。' * 40 + '</p></body></html>'
 
 class AuditTests(unittest.TestCase):
     def page(self, body=HTML):

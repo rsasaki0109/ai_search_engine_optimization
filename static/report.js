@@ -13,11 +13,11 @@
   function markdown(report, { at, prior, generatedAt = new Date().toISOString() } = {}) {
     const lines = ['# AEO Check 診断レポート', '', `**${text(report.title || 'タイトル未設定')}**`, '',
       `- URL: ${text(report.url)}`, `- 診断日時: ${text(at || '不明')}`, `- レポート出力日時: ${text(generatedAt)}`,
-      `- 技術チェックスコア: **${report.score} / 100**`, '', text(report.note), ''];
+      `- 技術チェックスコア: **${report.score} / 100**`, `- 判定基準バージョン: ${text(report.analysis_version || '1')}`, '', text(report.note), ''];
     const diff = history.compare(report, prior);
     if (diff) {
       lines.push('## 前回との比較', '', `比較対象: ${text(prior.at)}`, '');
-      if (!diff.compatible) lines.push('診断項目または配点が異なるため、比較できません。', '');
+      if (!diff.compatible) lines.push('判定基準・診断項目・配点のいずれかが異なるため、比較できません。', '');
       else {
         lines.push(`スコア差: **${diff.delta > 0 ? '+' : ''}${diff.delta} 点**`, '');
         if (diff.improved.length) lines.push(`- 改善: ${diff.improved.map(text).join('、')}`);
@@ -38,7 +38,16 @@
     });
     lines.push('## 技術チェック', '', '| 項目 | 結果 | 検出内容 |', '| --- | --- | --- |');
     report.checks.forEach(c => lines.push(`| ${text(c.label)} | ${c.passed ? '通過' : '要確認'} | ${text(c.evidence)} |`));
-    lines.push('', '## クローラーのアクセス設定', '', 'robots.txtによる指定URLへのアクセス設定です。実際の取得成功や引用を保証しません。GPTBotは学習用で、スコアには含めません。', '');
+    if (Array.isArray(report.schema_details)) {
+      lines.push('', '## 構造化データの詳細', '', 'JSON-LDの基本確認です。型の実在・必須項目・リッチリザルト適合は未検証です。外部contextは展開しません。', '');
+      if (!report.schema_details.length) lines.push('JSON-LDを検出できませんでした。', '');
+      report.schema_details.forEach(item => {
+        lines.push(`### JSON-LD #${item.block} · ${item.passed ? '基本確認を通過' : '要確認'}`, '', `検出した型: ${item.types.map(text).join('、') || 'なし'}`, '');
+        item.issues.forEach(issue => lines.push(`- ${text(issue)}`));
+        lines.push('');
+      });
+    }
+    lines.push('', '## クローラーのアクセス設定' , '', 'robots.txtによる指定URLへのアクセス設定です。実際の取得成功や引用を保証しません。GPTBotは学習用で、スコアには含めません。', '');
     if (report.robots_error) lines.push(text(report.robots_error), '');
     if (report.bots.length) {
       lines.push('| ボット | ルール上の判定 | 用途 |', '| --- | --- | --- |');

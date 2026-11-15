@@ -11,6 +11,11 @@
       if (!['http:', 'https:'].includes(url.protocol) || !url.hostname) return false;
     } catch { return false; }
     return r && typeof r.url === 'string' && /^https?:\/\//.test(r.url) &&
+      (r.analysis_version === undefined || typeof r.analysis_version === 'string') &&
+      (r.schema_details === undefined || (Array.isArray(r.schema_details) && r.schema_details.every(item =>
+        item && Number.isInteger(item.block) && typeof item.passed === 'boolean' &&
+        Array.isArray(item.types) && item.types.every(t => typeof t === 'string') &&
+        Array.isArray(item.issues) && item.issues.every(issue => typeof issue === 'string')))) &&
       Number.isFinite(r.score) && r.score >= 0 && r.score <= 100 &&
       ['title', 'note', 'excerpt'].every(k => typeof r[k] === 'string') &&
       Array.isArray(r.checks) && r.checks.length > 0 && r.checks.every(c =>
@@ -33,7 +38,7 @@
     if (!prior) return null;
     const old = prior.report;
     const signature = r => r.checks.map(c => `${c.id}:${c.weight}`).sort().join('|');
-    if (signature(current) !== signature(old)) return { compatible: false };
+    if ((current.analysis_version || '1') !== (old.analysis_version || '1') || signature(current) !== signature(old)) return { compatible: false };
     const byId = new Map(old.checks.map(c => [c.id, c]));
     return { compatible: true, delta: current.score - old.score,
       improved: current.checks.filter(c => c.passed && !byId.get(c.id).passed).map(c => c.label),

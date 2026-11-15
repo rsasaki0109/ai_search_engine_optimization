@@ -49,3 +49,14 @@ test('matches checks by ID regardless of ordering', () => {
   const old=report(); const current=report(); current.checks.reverse();
   assert.equal(history.compare(current,entry(old)).compatible,true);
 });
+test('preserves legacy records but refuses comparison across analysis versions', () => {
+  const old=report(); const current=report(); current.analysis_version='2';
+  assert.equal(history.read(JSON.stringify([entry(old)])).length,1);
+  assert.deepEqual(history.compare(current,entry(old)),{compatible:false});
+  old.analysis_version='2';
+  assert.equal(history.compare(current,entry(old)).compatible,true);
+});
+test('ignores corrupt structured-data details in saved records', () => {
+  const r=report(); r.schema_details=[{block:1,passed:false,types:'bad',issues:[]}];
+  assert.equal(history.read(JSON.stringify([entry(r)])).length,0);
+});
