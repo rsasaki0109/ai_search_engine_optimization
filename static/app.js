@@ -1,5 +1,7 @@
 const $ = id => document.getElementById(id);
 let report;
+let reportAt;
+let reportPrior;
 function el(tag, text, cls) { const n = document.createElement(tag); n.textContent = text; if (cls) n.className = cls; return n; }
 function repairPanel(repair) {
   const panel = el('details', '', 'repair');
@@ -40,8 +42,9 @@ $('audit-form').addEventListener('submit', async event => {
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || '診断に失敗しました。');
     const prior = AEOHistory.previous(history, data);
-    renderReport(data, prior);
-    history = [{ at: new Date().toISOString(), report: data }, ...history].slice(0, AEOHistory.LIMIT);
+    const at = new Date().toISOString();
+    renderReport(data, prior, at);
+    history = [{ at, report: data }, ...history].slice(0, AEOHistory.LIMIT);
     saveHistory();
     renderHistory();
     $('status').textContent = '診断が完了しました。';
@@ -50,14 +53,34 @@ $('audit-form').addEventListener('submit', async event => {
     $('status').textContent = error.name === 'TimeoutError' ? '診断がタイムアウトしました。時間をおいて再試行してください。' : error.message;
   } finally { setBusy(false); }
 });
+function downloadFile(content, mime, filename) {
+  const url = URL.createObjectURL(new Blob([content], { type: mime }));
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 $('download').addEventListener('click', () => {
-  if (!report) return;
-  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }));
-  const a = document.createElement('a'); a.href = url; a.download = 'aeo-report.json'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+  if (report) downloadFile(JSON.stringify(report, null, 2), 'application/json', 'aeo-report.json');
+});
+$('download-markdown').addEventListener('click', () => {
+  if (report) downloadFile(AEOReport.markdown(report, { at: reportAt, prior: reportPrior }), 'text/markdown;charset=utf-8', 'aeo-report.md');
+});
+$('print-report').addEventListener('click', () => { if (report) window.print(); });
+let printDetails = [];
+window.addEventListener('beforeprint', () => {
+  printDetails = [...document.querySelectorAll('#results .repair')].filter(detail => !detail.open);
+  printDetails.forEach(detail => { detail.open = true; });
+});
+window.addEventListener('afterprint', () => {
+  printDetails.forEach(detail => { detail.open = false; });
+  printDetails = [];
 });
 
-function renderReport(data, prior) {
+function renderReport(data, prior, at) {
   report = data;
+  reportAt = at;
+  reportPrior = prior;
+  document.body.classList.add('has-report');
+  $('report-date').textContent = `診断日時：${new Date(at).toLocaleString('ja-JP')} · AEO Check 診断レポート`;
   $('page-title').textContent = data.title || 'タイトル未設定';
   $('page-url').textContent = data.url;
   $('score').textContent = data.score;
@@ -137,7 +160,7 @@ function renderHistory() {
     const open = el('button', '結果を見る', 'secondary'); open.type = 'button'; open.disabled = busy;
     open.addEventListener('click', () => {
       $('url').value = entry.report.url;
-      renderReport(entry.report, AEOHistory.previous(history.slice(index + 1), entry.report));
+      renderReport(entry.report, AEOHistory.previous(history.slice(index + 1), entry.report), entry.at);
       $('status').textContent = `${new Date(entry.at).toLocaleString('ja-JP')} の保存結果を表示しています。再診断ではありません。`;
       $('status').className = '';
     });
@@ -155,6 +178,7 @@ $('clear-history').addEventListener('click', () => {
   }
   history = [];
   $('comparison').hidden = true;
+  reportPrior = undefined;
   renderHistory();
   $('status').textContent = storageNote || '診断履歴を削除しました。';
 });

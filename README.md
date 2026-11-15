@@ -17,12 +17,20 @@ python3 app.py
 - JSON-LDのJSON構文、canonical、html lang
 - meta robots / X-Robots-Tagのnoindex
 - robots.txtによるOAI-SearchBot / ChatGPT-User / PerplexityBot / Googlebot / GPTBotの指定URLへのアクセス可否
-- 優先順位つき改善案、適用場所つきの修正例とコピーボタン、JSONレポートの保存
+- 優先順位つき改善案、適用場所つきの修正例とコピーボタン、JSON・Markdownレポートの保存、印刷用レイアウトからのPDF保存
 - ブラウザ内の診断履歴（直近10件）、同じURLの前回結果との比較
 
 スコアは9項目の独自の重みづけ合計（100点）。本文・構造化データ・インデックス設定は各15点、言語は5点、その他は各10点。ボットの許可設定はスコアに含みません。GPTBotは学習用として区別します。
 
 **AI検索での引用率・実際の掲載状況を測定、保証するものではありません。** JavaScriptは実行しません。本文にはナビゲーション等が含まれ得ます。JSON-LDはスキーマ型や必須プロパティまで検証しません。robots.txtの取得失敗は不明として表示し、404/410はルールなしとして扱います。robots.txtは技術的なアクセス許可やHTTPステータスを保証しません。
+
+## レポートの共有
+
+診断結果の「Markdown ↓」で、診断日時・スコア・前回比較・優先順位つき改善案・修正コード・技術チェック・クローラー設定を `.md` ファイルに保存できます。「JSON ↓」では元の診断結果を保存します。
+
+「印刷 / PDF」からブラウザの印刷画面を開き、保存先に「PDFに保存」を選択してください。印刷時は修正例をすべて展開し、フォームや履歴・操作ボタンを非表示にします。印刷終了後は修正例の開閉状態を元に戻します。保存済みの履歴から出力する場合は元の診断日時を表示します。
+
+Markdownと印刷レポートには、他のURLの履歴と本文の抜粋を含めません。対象ページのURL・診断上の検出内容・修正例は含みます。ブラウザによって印刷時の改ページは異なります。
 
 ## 履歴と前回比較
 
@@ -53,7 +61,7 @@ HTTP/HTTPSの標準ポートのみ対応。公開IPのみ許可し、各リダ�
 ```bash
 python3 -m unittest discover -s tests -v
 node --check static/app.js
-node --test tests/history.test.cjs
+node --test tests/history.test.cjs tests/report.test.cjs
 ```
 
 ## 運用範囲
@@ -74,4 +82,10 @@ python3 tools/create_hero.py
 
 ```bash
 python3 tests/browser_history.py
+```
+
+レポートのブラウザ検証（同じ開発用依存と `pdftotext` を使用）：
+
+```bash
+python3 tests/browser_report.py
 ```

@@ -207,7 +207,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
-        assets = {'/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript; charset=utf-8'), '/history.js': ('history.js', 'text/javascript; charset=utf-8'), '/style.css': ('style.css', 'text/css; charset=utf-8')}
+        assets = {'/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript; charset=utf-8'), '/history.js': ('history.js', 'text/javascript; charset=utf-8'), '/report.js': ('report.js', 'text/javascript; charset=utf-8'), '/style.css': ('style.css', 'text/css; charset=utf-8')}
         if self.path not in assets: return self.send(404, b'{}')
         name, mime = assets[self.path]
         self.send(200, (ROOT / 'static' / name).read_bytes(), mime)
