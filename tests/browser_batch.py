@@ -14,6 +14,9 @@ release=threading.Event()
 
 def fixture(url, deadline=None):
     path=urlsplit(url).path
+    if path in ('/sitemap.xml','/pages.xml'):
+        body='<sitemapindex><sitemap><loc>https://example.com/pages.xml</loc></sitemap></sitemapindex>' if path=='/sitemap.xml' else '<urlset>'+''.join(f'<url><loc>https://example.com/{n}</loc></url>' for n in range(6))+'</urlset>'
+        return dict(url=url,status=200,type='application/xml',body=body)
     if path=='/slow': release.wait(timeout=5)
     if path=='/robots.txt':return dict(url=url,status=200,type='text/plain',body='User-agent: *\nAllow: /')
     return dict(url=url,status=404 if path.startswith('/broken') else 200,type='text/html',body=f'<html lang="ja"><title>Page {path}</title><h1>Sample</h1></html>',robots_header='')
@@ -31,7 +34,18 @@ def main():
             page.route('https://fonts.googleapis.com/**',lambda r:r.abort())
             base=f'http://127.0.0.1:{server.server_port}'
             page.goto(base)
-            page.locator('#batch-toggle').click()
+            page.locator('#sitemap-picker summary').click()
+            page.locator('#sitemap-url').fill('https://example.com/sitemap.xml')
+            page.locator('#sitemap-load').click()
+            expect(page.locator('.sitemap-child')).to_have_count(1)
+            page.locator('.sitemap-child').click()
+            expect(page.locator('.sitemap-choice')).to_have_count(6)
+            for n in range(5):page.locator('.sitemap-choice input').nth(n).check()
+            expect(page.locator('.sitemap-choice input').nth(5)).to_be_disabled()
+            page.locator('#sitemap-apply').click()
+            expect(page.locator('#batch-urls')).to_have_value('\n'.join(f'https://example.com/{n}' for n in range(5)))
+            assert not calls # Loading candidates never starts audits.
+
             expect(page.locator('#audit-form')).to_be_hidden()
             expect(page.locator('#batch-toggle')).to_have_attribute('aria-expanded','true')
             page.locator('#batch-urls').fill('\n'.join(f'https://example.com/{n}' for n in range(6)))

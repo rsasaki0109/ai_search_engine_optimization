@@ -37,6 +37,7 @@ jobs:
           node --check static/history.js
           node --check static/report.js
           node --check static/batch.js
+          node --check static/sitemap.js
       - name: History and report tests
         run: |
           node tests/history.test.cjs

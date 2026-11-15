@@ -14,6 +14,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit, urljoin
 from robots import RobotsRules
+from sitemap import parse_sitemap
 
 ROOT = Path(__file__).parent
 LIMIT = 2_000_000
@@ -307,6 +308,13 @@ def audit(url):
     return analyze(page, robots, error)
 
 
+def load_sitemap(url):
+    result = fetch(url)
+    if result['status'] != 200:
+        raise ValueError(f'サイトマップを取得できませんでした（HTTP {result["status"]}）。')
+    return parse_sitemap(result['body'], result['url'], validate_url)
+
+
 def error_message(error):
     return str(error) if isinstance(error, ValueError) else 'ページを取得できませんでした。URLやサイトのアクセス制限を確認してください。'
 
@@ -348,20 +356,21 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
-        assets = {'/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript; charset=utf-8'), '/history.js': ('history.js', 'text/javascript; charset=utf-8'), '/report.js': ('report.js', 'text/javascript; charset=utf-8'), '/batch.js': ('batch.js', 'text/javascript; charset=utf-8'), '/style.css': ('style.css', 'text/css; charset=utf-8')}
+        assets = {'/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript; charset=utf-8'), '/history.js': ('history.js', 'text/javascript; charset=utf-8'), '/report.js': ('report.js', 'text/javascript; charset=utf-8'), '/batch.js': ('batch.js', 'text/javascript; charset=utf-8'), '/sitemap.js': ('sitemap.js', 'text/javascript; charset=utf-8'), '/style.css': ('style.css', 'text/css; charset=utf-8')}
         if self.path not in assets: return self.send(404, b'{}')
         name, mime = assets[self.path]
         self.send(200, (ROOT / 'static' / name).read_bytes(), mime)
 
     def do_POST(self):
-        if self.path not in ('/api/audit', '/api/audit/batch'): return self.send(404, b'{}')
+        if self.path not in ('/api/audit', '/api/audit/batch', '/api/sitemap'): return self.send(404, b'{}')
         try:
             size = int(self.headers.get('Content-Length', '0'))
             limit = 16384 if self.path == '/api/audit/batch' else 4096
             if not 0 < size <= limit: raise ValueError('リクエストのサイズが不正です。')
             payload = json.loads(self.rfile.read(size))
             if not isinstance(payload, dict): raise ValueError('JSONオブジェクトが必要です。')
-            result = audit_batch(payload.get('urls')) if self.path == '/api/audit/batch' else audit(payload.get('url'))
+            if self.path == '/api/sitemap': result = load_sitemap(payload.get('url'))
+            else: result = audit_batch(payload.get('urls')) if self.path == '/api/audit/batch' else audit(payload.get('url'))
             self.send(200, json.dumps(result, ensure_ascii=False).encode())
         except (ValueError, OSError, http.client.HTTPException) as e:
             message = error_message(e)

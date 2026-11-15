@@ -137,7 +137,8 @@ function setBusy(value) {
   busy = value;
   $('submit').disabled = value;
   $('clear-history').disabled = value || !history.length;
-  document.querySelectorAll('#history-list button, #batch-form button, #batch-toggle, #batch-results button').forEach(button => { button.disabled = value; });
+  document.querySelectorAll('#history-list button, #batch-form button, #batch-toggle, #batch-results button, #sitemap-form button, #sitemap-candidates button, #sitemap-apply').forEach(button => { button.disabled = value; });
+  if (typeof refreshSitemapSelection === 'function') refreshSitemapSelection();
 }
 function renderComparison(data, prior) {
   const container = $('comparison'); container.replaceChildren();
