@@ -13,6 +13,14 @@ python3 app.py
 # http://127.0.0.1:8000
 ```
 
+## URLなしで試す
+
+トップの「URLなしでサンプルを試す」から、検証用ページの診断を体験できます。「① 修正前を見る」→「② 修正後と比較する」で、同じ診断ロジックによる30点→100点（+70点）の変化と、改善した6項目を表示します。本文・見出し・description・canonical・JSON-LDを整えた例です。
+
+サンプルは外部サイトを取得せず、同梱HTMLを解析します。通常の履歴には保存せず、既存の履歴も変更しません。JSON・Markdown・印刷レポートには検証用サンプルである旨を含めます。100点はこのツールの技術チェックをすべて通過したという意味で、AI検索での掲載・引用や改善効果を保証しません。
+
+サンプルHTMLは `static/demo/before.html` と `static/demo/after.html`、表示ページは `/demo/before` と `/demo/after` です。`GET /api/demo` は `before` と `after` の診断結果を返します。ブラウザ検証は `python3 tests/browser_demo.py` で実行できます。
+
 ## 診断内容
 
 - title、meta description、H1、H2、本文の取得可否

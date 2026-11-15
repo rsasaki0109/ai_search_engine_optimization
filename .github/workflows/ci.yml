@@ -38,6 +38,7 @@ jobs:
           node --check static/report.js
           node --check static/batch.js
           node --check static/sitemap.js
+          node --check static/demo.js
       - name: History and report tests
         run: |
           node tests/history.test.cjs
@@ -70,3 +71,6 @@ jobs:
         run: python tests/browser_report.py
       - name: Batch audits and partial failures
         run: python tests/browser_batch.py
+
+      - name: Before and after sample demo
+        run: python tests/browser_demo.py

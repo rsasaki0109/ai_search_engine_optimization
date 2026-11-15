@@ -75,6 +75,7 @@ window.addEventListener('afterprint', () => {
 
 function renderReport(data, prior, at) {
   report = data;
+  $('demo-controls').hidden = !data.is_demo;
   reportAt = at;
   reportPrior = prior;
   document.body.classList.add('has-report');
@@ -137,7 +138,7 @@ function setBusy(value) {
   busy = value;
   $('submit').disabled = value;
   $('clear-history').disabled = value || !history.length;
-  document.querySelectorAll('#history-list button, #batch-form button, #batch-toggle, #batch-results button, #sitemap-form button, #sitemap-candidates button, #sitemap-apply, #history-backup button').forEach(button => { button.disabled = value; });
+  document.querySelectorAll('#history-list button, #batch-form button, #batch-toggle, #batch-results button, #sitemap-form button, #sitemap-candidates button, #sitemap-apply, #history-backup button, #demo-start, #demo-controls button').forEach(button => { button.disabled = value; });
   $('backup-export').disabled = value || !history.length;
   if (typeof refreshSitemapSelection === 'function') refreshSitemapSelection();
 }

@@ -308,6 +308,17 @@ def audit(url):
     return analyze(page, robots, error)
 
 
+def demo_audits():
+    reports = {}
+    for stage in ('before', 'after'):
+        body = (ROOT / 'static' / 'demo' / f'{stage}.html').read_text()
+        report = analyze(dict(url='https://demo.example/guide', body=body, robots_header=''), 'User-agent: *\nAllow: /')
+        report.update(is_demo=True, demo_stage=stage)
+        report['note'] = '検証用サンプルHTMLの診断です。実サイトの評価やAI検索での効果を示すものではありません。' + report['note']
+        reports[stage] = report
+    return reports
+
+
 def load_sitemap(url):
     result = fetch(url)
     if result['status'] != 200:
@@ -356,7 +367,9 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
-        assets = {'/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript; charset=utf-8'), '/history.js': ('history.js', 'text/javascript; charset=utf-8'), '/report.js': ('report.js', 'text/javascript; charset=utf-8'), '/batch.js': ('batch.js', 'text/javascript; charset=utf-8'), '/sitemap.js': ('sitemap.js', 'text/javascript; charset=utf-8'), '/style.css': ('style.css', 'text/css; charset=utf-8')}
+        if self.path == '/api/demo':
+            return self.send(200, json.dumps(demo_audits(), ensure_ascii=False).encode())
+        assets = {'/demo/before': ('demo/before.html', 'text/html; charset=utf-8'), '/demo/after': ('demo/after.html', 'text/html; charset=utf-8'), '/demo.js': ('demo.js', 'text/javascript; charset=utf-8'), '/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript; charset=utf-8'), '/history.js': ('history.js', 'text/javascript; charset=utf-8'), '/report.js': ('report.js', 'text/javascript; charset=utf-8'), '/batch.js': ('batch.js', 'text/javascript; charset=utf-8'), '/sitemap.js': ('sitemap.js', 'text/javascript; charset=utf-8'), '/style.css': ('style.css', 'text/css; charset=utf-8')}
         if self.path not in assets: return self.send(404, b'{}')
         name, mime = assets[self.path]
         self.send(200, (ROOT / 'static' / name).read_bytes(), mime)
