@@ -17,7 +17,7 @@ def main():
     server = app.ThreadingHTTPServer(('127.0.0.1',0), app.Handler)
     threading.Thread(target=server.serve_forever, daemon=True).start()
     sample = dict(url='https://example.com/guide', body='<html lang="ja"><title>Report Demo</title><h1>Report Demo</h1><p>PRIVATE_EXCERPT_MARKER</p><script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Article"},{"@type":"Organization"}]}</script><script type="application/ld+json">broken</script></html>', robots_header='')
-    report = app.analyze(sample, 'User-agent: *\nAllow: /')
+    report = app.analyze(sample, 'User-agent: *\nDisallow: /\nAllow: /guide$\n\nUser-agent: GPTBot\nDisallow: /')
     old = json.loads(json.dumps(report)); old['score'] -= 10
     next(c for c in old['checks'] if c['id']=='title')['passed'] = False
     unrelated = json.loads(json.dumps(report)); unrelated['url']='https://example.com/PRIVATE_OTHER_HISTORY'
@@ -34,6 +34,9 @@ def main():
             page.locator('.history-row').first.get_by_role('button',name='結果を見る',exact=True).click()
             expect(page.locator('#comparison')).to_contain_text('+10 点')
             expect(page.locator('.schema-card')).to_have_count(2)
+            expect(page.locator('.bot').first).to_contain_text('Allow: /guide$（3行目）')
+            expect(page.locator('.bot').last).to_contain_text('適用グループ：GPTBot')
+            expect(page.locator('.bot').last).to_contain_text('制限')
             expect(page.locator('.schema-card').first).to_contain_text('Article、Organization')
             expect(page.locator('.schema-card').nth(1)).to_contain_text('JSONの構文を解析できません')
             with page.expect_download() as capture: page.locator('#download-markdown').click()
@@ -43,6 +46,7 @@ def main():
             assert '2026\\-11\\-15T02:00:00Z' in text
             assert '**+10 点**' in text and '```html' in text
             assert '## 構造化データの詳細' in text and 'Article' in text
+            assert 'Allow: /guide$（3行目）' in text
             assert 'PRIVATE_EXCERPT_MARKER' not in text and 'PRIVATE_OTHER_HISTORY' not in text
             with page.expect_download() as capture: page.locator('#download').click()
             assert json.loads(Path(capture.value.path()).read_text())==report
@@ -55,6 +59,7 @@ def main():
             assert 'Report Demo' in pdftext and 'application/ld+json' in pdftext
             assert '2026/11/15' in pdftext
             assert 'Article' in pdftext and 'Organization' in pdftext
+            assert 'Allow: /guide$' in pdftext
             assert 'PRIVATE_EXCERPT_MARKER' not in pdftext and 'PRIVATE_OTHER_HISTORY' not in pdftext
             page.evaluate('() => { window.print = () => { window.printCalled = true; }; }')
             page.locator('#print-report').click()

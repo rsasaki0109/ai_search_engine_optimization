@@ -103,7 +103,16 @@ function renderReport(data, prior, at) {
   });
   renderSchemaDetails(data);
   $('bots').replaceChildren();
-  data.bots.forEach(bot => { const card = el('article', '', 'bot'); card.append(el('b', bot.name), el('span', bot.allowed ? '✓ ルール上は許可' : '× ルール上は制限'), el('small', bot.purpose)); $('bots').append(card); });
+  data.bots.forEach(bot => {
+    const card = el('article', '', 'bot');
+    card.append(el('b', bot.name), el('span', bot.allowed ? '✓ ルール上は許可' : '× ルール上は制限'), el('small', bot.purpose));
+    if (bot.reason) {
+      card.append(el('p', `適用グループ：${bot.group}`, 'bot-group'));
+      if (bot.matched_rule) card.append(el('code', `${bot.matched_rule}（${bot.matched_line}行目）`, 'bot-rule'));
+      card.append(el('p', bot.reason, 'bot-reason'));
+    }
+    $('bots').append(card);
+  });
   $('robots-note').hidden = !data.robots_error;
   $('robots-note').textContent = data.robots_error || '';
   $('excerpt').textContent = data.excerpt || '本文テキストなし';

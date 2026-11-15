@@ -56,3 +56,9 @@ test('exports structured-data findings and analysis version', () => {
   assert.ok(md.includes('検出した型: Article'));
   assert.ok(md.includes('@contextを確認'));
 });
+test('exports crawler group and matched rule with line number', () => {
+  const r=report();Object.assign(r.bots[0],{group:'*',matched_rule:'Disallow: /private/*$',matched_line:3,reason:'最長一致'});
+  const md=markdown(r,options);
+  assert.ok(md.includes('適用グループ'));
+  assert.ok(md.includes('Disallow: /private/\\*$（3行目）'));
+});

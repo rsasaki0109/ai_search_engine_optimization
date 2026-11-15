@@ -11,7 +11,7 @@ from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit, urljoin
-from urllib.robotparser import RobotFileParser
+from robots import RobotsRules
 
 ROOT = Path(__file__).parent
 LIMIT = 2_000_000
@@ -272,10 +272,12 @@ def analyze(page, robots=None, robots_error=None):
     add('index', 'インデックス設定', not blocked, directives.strip(', ') or 'noindex指定は検出されませんでした', '検索に公開するページならnoindexを解除する。非公開の意図がある場合は維持する。', 15)
     bots = []
     if robots is not None:
-        rp = RobotFileParser()
-        rp.parse(robots.splitlines())
-        for bot in BOTS:
-            bots.append({'name': bot, 'allowed': rp.can_fetch(bot, page['url']), 'purpose': '学習用' if bot == 'GPTBot' else '検索・ユーザー取得'})
+        try:
+            rules = RobotsRules(robots)
+            for bot in BOTS:
+                bots.append({'name': bot, **rules.decision(bot, page['url']), 'purpose': '学習用' if bot == 'GPTBot' else '検索・ユーザー取得'})
+        except ValueError as error:
+            robots_error = str(error)
     score = round(sum(c['weight'] for c in checks if c['passed']) / sum(c['weight'] for c in checks) * 100)
     for check in checks:
         if not check['passed']:

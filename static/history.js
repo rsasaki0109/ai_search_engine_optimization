@@ -22,7 +22,9 @@
         c && ['id','label','evidence','action'].every(k => typeof c[k] === 'string') &&
         typeof c.passed === 'boolean' && Number.isFinite(c.weight) &&
         (!c.repair || (typeof c.repair.location === 'string' && typeof c.repair.note === 'string' && (c.repair.code === null || typeof c.repair.code === 'string')))) &&
-      Array.isArray(r.bots) && r.bots.every(b => b && typeof b.name === 'string' && typeof b.allowed === 'boolean' && typeof b.purpose === 'string');
+      Array.isArray(r.bots) && r.bots.every(b => b && typeof b.name === 'string' && typeof b.allowed === 'boolean' && typeof b.purpose === 'string' &&
+        (b.reason === undefined || (typeof b.reason === 'string' && typeof b.group === 'string' &&
+          (b.matched_rule === null || typeof b.matched_rule === 'string') && (b.matched_line === null || Number.isInteger(b.matched_line)))));
   }
   function read(raw) {
     try {

@@ -50,8 +50,8 @@
     lines.push('', '## クローラーのアクセス設定' , '', 'robots.txtによる指定URLへのアクセス設定です。実際の取得成功や引用を保証しません。GPTBotは学習用で、スコアには含めません。', '');
     if (report.robots_error) lines.push(text(report.robots_error), '');
     if (report.bots.length) {
-      lines.push('| ボット | ルール上の判定 | 用途 |', '| --- | --- | --- |');
-      report.bots.forEach(b => lines.push(`| ${text(b.name)} | ${b.allowed ? '許可' : '制限'} | ${text(b.purpose)} |`));
+      lines.push('| ボット | ルール上の判定 | 用途 | 適用グループ | 一致ルール |', '| --- | --- | --- | --- | --- |');
+      report.bots.forEach(b => lines.push(`| ${text(b.name)} | ${b.allowed ? '許可' : '制限'} | ${text(b.purpose)} | ${text(b.group ?? '記録なし')} | ${text(b.matched_rule ? `${b.matched_rule}（${b.matched_line}行目）` : (b.reason || '記録なし'))} |`));
     } else lines.push('アクセス設定は不明です。');
     lines.push('', '---', '', 'AEO Check · 公開HTMLに基づく技術診断。本文の抜粋・他のURLの履歴はこのレポートに含みません。', '');
     return lines.join('\n');
