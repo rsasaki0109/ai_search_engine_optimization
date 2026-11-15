@@ -137,7 +137,8 @@ function setBusy(value) {
   busy = value;
   $('submit').disabled = value;
   $('clear-history').disabled = value || !history.length;
-  document.querySelectorAll('#history-list button, #batch-form button, #batch-toggle, #batch-results button, #sitemap-form button, #sitemap-candidates button, #sitemap-apply').forEach(button => { button.disabled = value; });
+  document.querySelectorAll('#history-list button, #batch-form button, #batch-toggle, #batch-results button, #sitemap-form button, #sitemap-candidates button, #sitemap-apply, #history-backup button').forEach(button => { button.disabled = value; });
+  $('backup-export').disabled = value || !history.length;
   if (typeof refreshSitemapSelection === 'function') refreshSitemapSelection();
 }
 function renderComparison(data, prior) {
@@ -157,6 +158,7 @@ function renderComparison(data, prior) {
   container.append(el('p', '同じ取得後URLの直前の保存結果と比較しています。AI検索での評価の変化を示すものではありません。', 'hint'));
 }
 function renderHistory() {
+  $('backup-export').disabled = busy || !history.length;
   $('history').hidden = !history.length && !storageNote;
   $('history-status').textContent = storageNote;
   $('clear-history').disabled = busy || !history.length;
@@ -218,3 +220,34 @@ function rememberAudit(data, at) {
   renderHistory();
   return prior;
 }
+
+$('backup-export').addEventListener('click', () => {
+  if (busy || !history.length) return;
+  const content = JSON.stringify(AEOHistory.backup(history), null, 2);
+  if (new Blob([content]).size > 5 * 1024 * 1024) {
+    $('backup-status').textContent = '履歴がバックアップ上限（5MiB）を超えています。必要な診断結果は個別のJSONでも保存できます。';
+    return;
+  }
+  downloadFile(content, 'application/json', 'aeo-history-backup.json');
+  $('backup-status').textContent = `${history.length}件の履歴をバックアップしました。`;
+});
+$('backup-import').addEventListener('click', () => { if (!busy) $('backup-file').click(); });
+$('backup-file').addEventListener('change', async () => {
+  const file = $('backup-file').files[0];
+  if (!file || busy) return;
+  setBusy(true);
+  try {
+    if (file.size > 5 * 1024 * 1024) throw new Error('バックアップの上限（5MiB）を超えています。');
+    const incoming = AEOHistory.parseBackup(await file.text());
+    const merged = AEOHistory.merge(history, incoming);
+    history = merged;
+    saveHistory();
+    renderHistory();
+    $('backup-status').textContent = `${incoming.length}件を読み込み、最新${history.length}件の履歴に統合しました。${storageNote}`;
+  } catch (error) {
+    $('backup-status').textContent = error.message;
+  } finally {
+    $('backup-file').value = '';
+    setBusy(false);
+  }
+});

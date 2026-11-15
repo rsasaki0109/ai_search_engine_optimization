@@ -60,3 +60,25 @@ test('ignores corrupt structured-data details in saved records', () => {
   const r=report(); r.schema_details=[{block:1,passed:false,types:'bad',issues:[]}];
   assert.equal(history.read(JSON.stringify([entry(r)])).length,0);
 });
+test('backup round trip preserves complete records and legacy versions', () => {
+  const rows=[entry(report())];
+  const data=history.backup(rows);
+  assert.equal(data.format,'aeo-check-history');
+  assert.deepEqual(history.parseBackup(JSON.stringify(data)),rows);
+});
+test('rejects invalid backups as a whole without silently dropping records', () => {
+  for (const value of ['broken','[]',JSON.stringify({format:'aeo-check-history',version:2,entries:[]}),JSON.stringify(history.backup([entry(report()),{at:'bad',report:report()}])),JSON.stringify(history.backup(Array.from({length:11},()=>entry(report()))))]) {
+    assert.throws(()=>history.parseBackup(value));
+  }
+});
+test('merges newest ten while retaining existing duplicate records', () => {
+  const current=entry(report());
+  const duplicate={...entry(report()),at:'2026-11-15T00:00:00+00:00'};
+  duplicate.report.title='do not replace';
+  assert.deepEqual(history.merge([current],[duplicate]),[current]);
+  const rows=Array.from({length:10},(_,i)=>({at:`2026-11-${String(i+1).padStart(2,'0')}T00:00:00Z`,report:report()}));
+  const merged=history.merge(rows,[current]);
+  assert.equal(merged.length,10);
+  assert.equal(merged[0],current);
+  assert.equal(merged.at(-1).at,'2026-11-02T00:00:00Z');
+});

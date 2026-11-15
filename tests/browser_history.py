@@ -4,6 +4,7 @@ All audit data comes from fixtures; no external page is fetched.
 """
 from pathlib import Path
 import os
+import json
 import sys
 import threading
 from unittest.mock import patch
@@ -71,9 +72,32 @@ def main():
             for width in [375,320]:
                 page.set_viewport_size({'width':width,'height':850})
                 assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+            page.locator('#history-backup summary').click()
+            with page.expect_download() as captured: page.locator('#backup-export').click()
+            download=captured.value
+            assert download.suggested_filename=='aeo-history-backup.json'
+            backup=Path(download.path()).read_bytes()
+            assert len(json.loads(backup)['entries'])==10
             page.locator('#clear-history').click()
             expect(page.locator('#history')).to_be_hidden()
             assert page.evaluate('localStorage.getItem(AEOHistory.KEY)') is None
+            start=len(requests)
+            with page.expect_file_chooser() as chooser: page.locator('#backup-import').click()
+            chooser.value.set_files({'name':'backup.json','mimeType':'application/json','buffer':backup})
+            expect(page.locator('.history-row')).to_have_count(10)
+            expect(page.locator('#backup-status')).to_contain_text('統合しました')
+            assert len(requests)==start
+            page.locator('.history-row').first.get_by_role('button',name='結果を見る',exact=True).click()
+            expect(page.locator('#status')).to_contain_text('保存結果')
+            page.locator('#backup-file').set_input_files({'name':'invalid.json','mimeType':'application/json','buffer':b'{}'})
+            expect(page.locator('#backup-status')).to_contain_text('形式バージョン1')
+            expect(page.locator('.history-row')).to_have_count(10)
+            page.locator('#backup-file').set_input_files({'name':'large.json','mimeType':'application/json','buffer':b' '*(5*1024*1024+1)})
+            expect(page.locator('#backup-status')).to_contain_text('5MiB')
+            expect(page.locator('.history-row')).to_have_count(10)
+            page.reload()
+            expect(page.locator('.history-row')).to_have_count(10)
+            page.locator('#clear-history').click()
             page.reload()
             expect(page.locator('#history')).to_be_hidden()
             page.evaluate("localStorage.setItem(AEOHistory.KEY, '{broken')")

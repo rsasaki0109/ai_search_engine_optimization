@@ -36,6 +36,27 @@
   function previous(rows, report) {
     return rows.find(row => urlKey(row.report.url) === urlKey(report.url));
   }
+  function backup(rows) {
+    return { format: 'aeo-check-history', version: 1, exported_at: new Date().toISOString(), entries: rows };
+  }
+  function parseBackup(raw) {
+    let data;
+    try { data = JSON.parse(raw); } catch { throw new Error('JSONファイルを解析できませんでした。'); }
+    if (!data || data.format !== 'aeo-check-history' || data.version !== 1 || !Array.isArray(data.entries) || data.entries.length > LIMIT) {
+      throw new Error('AEO Checkの履歴バックアップ（形式バージョン1、最大10件）を選択してください。');
+    }
+    const rows = read(JSON.stringify(data.entries));
+    if (rows.length !== data.entries.length) throw new Error('日時や診断データが不正なため、履歴を読み込めませんでした。');
+    return rows;
+  }
+  function merge(current, incoming) {
+    const seen = new Set();
+    return [...current, ...incoming].filter(row => {
+      const key = JSON.stringify([new Date(row.at).toISOString(), urlKey(row.report.url)]);
+      if (seen.has(key)) return false;
+      seen.add(key); return true;
+    }).sort((a,b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, LIMIT);
+  }
   function compare(current, prior) {
     if (!prior) return null;
     const old = prior.report;
@@ -46,7 +67,7 @@
       improved: current.checks.filter(c => c.passed && !byId.get(c.id).passed).map(c => c.label),
       regressed: current.checks.filter(c => !c.passed && byId.get(c.id).passed).map(c => c.label) };
   }
-  const api = { KEY, LIMIT, read, validReport, previous, compare };
+  const api = { KEY, LIMIT, read, validReport, previous, compare, backup, parseBackup, merge };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.AEOHistory = api;
 })(typeof window === 'undefined' ? globalThis : window);
