@@ -1,0 +1,45 @@
+/* Browser-local audit records; pure helpers are also tested with node:test. */
+(function (root) {
+  const KEY = 'aeo-check.history.v1';
+  const LIMIT = 10;
+  function urlKey(value) {
+    const url = new URL(value); url.hash = ''; return url.href;
+  }
+  function validReport(r) {
+    try {
+      const url = new URL(r.url);
+      if (!['http:', 'https:'].includes(url.protocol) || !url.hostname) return false;
+    } catch { return false; }
+    return r && typeof r.url === 'string' && /^https?:\/\//.test(r.url) &&
+      Number.isFinite(r.score) && r.score >= 0 && r.score <= 100 &&
+      ['title', 'note', 'excerpt'].every(k => typeof r[k] === 'string') &&
+      Array.isArray(r.checks) && r.checks.length > 0 && r.checks.every(c =>
+        c && ['id','label','evidence','action'].every(k => typeof c[k] === 'string') &&
+        typeof c.passed === 'boolean' && Number.isFinite(c.weight) &&
+        (!c.repair || (typeof c.repair.location === 'string' && typeof c.repair.note === 'string' && (c.repair.code === null || typeof c.repair.code === 'string')))) &&
+      Array.isArray(r.bots) && r.bots.every(b => b && typeof b.name === 'string' && typeof b.allowed === 'boolean' && typeof b.purpose === 'string');
+  }
+  function read(raw) {
+    try {
+      const rows = JSON.parse(raw || '[]');
+      if (!Array.isArray(rows)) return [];
+      return rows.filter(row => row && typeof row.at === 'string' && Number.isFinite(Date.parse(row.at)) && validReport(row.report)).slice(0, LIMIT);
+    } catch { return []; }
+  }
+  function previous(rows, report) {
+    return rows.find(row => urlKey(row.report.url) === urlKey(report.url));
+  }
+  function compare(current, prior) {
+    if (!prior) return null;
+    const old = prior.report;
+    const signature = r => r.checks.map(c => `${c.id}:${c.weight}`).sort().join('|');
+    if (signature(current) !== signature(old)) return { compatible: false };
+    const byId = new Map(old.checks.map(c => [c.id, c]));
+    return { compatible: true, delta: current.score - old.score,
+      improved: current.checks.filter(c => c.passed && !byId.get(c.id).passed).map(c => c.label),
+      regressed: current.checks.filter(c => !c.passed && byId.get(c.id).passed).map(c => c.label) };
+  }
+  const api = { KEY, LIMIT, read, validReport, previous, compare };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  else root.AEOHistory = api;
+})(typeof window === 'undefined' ? globalThis : window);
