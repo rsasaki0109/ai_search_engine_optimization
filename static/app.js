@@ -37,16 +37,14 @@ $('audit-form').addEventListener('submit', async event => {
   $('status').className = '';
   $('status').textContent = 'ページとrobots.txtを確認しています…';
   $('results').hidden = true;
+  $('batch-results').hidden = true;
   try {
     const response = await fetch('/api/audit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: $('url').value.trim() }), signal: AbortSignal.timeout(40000) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || '診断に失敗しました。');
-    const prior = AEOHistory.previous(history, data);
     const at = new Date().toISOString();
+    const prior = rememberAudit(data, at);
     renderReport(data, prior, at);
-    history = [{ at, report: data }, ...history].slice(0, AEOHistory.LIMIT);
-    saveHistory();
-    renderHistory();
     $('status').textContent = '診断が完了しました。';
   } catch (error) {
     $('status').className = 'error';
@@ -139,7 +137,7 @@ function setBusy(value) {
   busy = value;
   $('submit').disabled = value;
   $('clear-history').disabled = value || !history.length;
-  document.querySelectorAll('#history-list button').forEach(button => { button.disabled = value; });
+  document.querySelectorAll('#history-list button, #batch-form button, #batch-toggle, #batch-results button').forEach(button => { button.disabled = value; });
 }
 function renderComparison(data, prior) {
   const container = $('comparison'); container.replaceChildren();
@@ -210,4 +208,12 @@ function renderSchemaDetails(data) {
     }
     list.append(card);
   });
+}
+
+function rememberAudit(data, at) {
+  const prior = AEOHistory.previous(history, data);
+  history = [{ at, report: data }, ...history].sort((a,b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, AEOHistory.LIMIT);
+  saveHistory();
+  renderHistory();
+  return prior;
 }

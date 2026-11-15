@@ -6,6 +6,8 @@ import json
 import re
 import socket
 import time
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 from html.parser import HTMLParser
 from html import escape
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -305,6 +307,36 @@ def audit(url):
     return analyze(page, robots, error)
 
 
+def error_message(error):
+    return str(error) if isinstance(error, ValueError) else 'ページを取得できませんでした。URLやサイトのアクセス制限を確認してください。'
+
+
+def audit_batch(urls):
+    if not isinstance(urls, list) or not 1 <= len(urls) <= 5:
+        raise ValueError('URLは1件から5件までの配列で指定してください。')
+    unique = []
+    for url in urls:
+        p = validate_url(url)
+        normalized = urlunsplit(p._replace(fragment=''))
+        if normalized not in unique: unique.append(normalized)
+
+    def run(url):
+        result = dict(url=url)
+        try:
+            result['report'] = audit(url)
+        except (ValueError, OSError, http.client.HTTPException) as error:
+            result['error'] = error_message(error)
+        result['at'] = datetime.now(timezone.utc).isoformat()
+        return result
+
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        rows = list(pool.map(run, unique))
+    successful = [row['report'] for row in rows if 'report' in row]
+    return dict(results=rows, summary=dict(total=len(rows), succeeded=len(successful),
+        failed=len(rows) - len(successful),
+        average_score=round(sum(r['score'] for r in successful) / len(successful), 1) if successful else None))
+
+
 class Handler(BaseHTTPRequestHandler):
     def send(self, status, data, mime='application/json; charset=utf-8'):
         self.send_response(status)
@@ -316,22 +348,23 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def do_GET(self):
-        assets = {'/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript; charset=utf-8'), '/history.js': ('history.js', 'text/javascript; charset=utf-8'), '/report.js': ('report.js', 'text/javascript; charset=utf-8'), '/style.css': ('style.css', 'text/css; charset=utf-8')}
+        assets = {'/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript; charset=utf-8'), '/history.js': ('history.js', 'text/javascript; charset=utf-8'), '/report.js': ('report.js', 'text/javascript; charset=utf-8'), '/batch.js': ('batch.js', 'text/javascript; charset=utf-8'), '/style.css': ('style.css', 'text/css; charset=utf-8')}
         if self.path not in assets: return self.send(404, b'{}')
         name, mime = assets[self.path]
         self.send(200, (ROOT / 'static' / name).read_bytes(), mime)
 
     def do_POST(self):
-        if self.path != '/api/audit': return self.send(404, b'{}')
+        if self.path not in ('/api/audit', '/api/audit/batch'): return self.send(404, b'{}')
         try:
             size = int(self.headers.get('Content-Length', '0'))
-            if not 0 < size <= 4096: raise ValueError('リクエストのサイズが不正です。')
+            limit = 16384 if self.path == '/api/audit/batch' else 4096
+            if not 0 < size <= limit: raise ValueError('リクエストのサイズが不正です。')
             payload = json.loads(self.rfile.read(size))
             if not isinstance(payload, dict): raise ValueError('JSONオブジェクトが必要です。')
-            result = audit(payload.get('url'))
+            result = audit_batch(payload.get('urls')) if self.path == '/api/audit/batch' else audit(payload.get('url'))
             self.send(200, json.dumps(result, ensure_ascii=False).encode())
         except (ValueError, OSError, http.client.HTTPException) as e:
-            message = str(e) if isinstance(e, ValueError) else 'ページを取得できませんでした。URLやサイトのアクセス制限を確認してください。'
+            message = error_message(e)
             self.send(400, json.dumps({'error': message}, ensure_ascii=False).encode())
 
 
