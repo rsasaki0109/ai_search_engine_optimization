@@ -1,0 +1,223 @@
+{
+  "checked_at": "2026-11-16T00:26:21.966152+00:00",
+  "results": [
+    {
+      "url": "https://example.com",
+      "outcome": "diagnosed",
+      "score": 30,
+      "checks": 9,
+      "bots": 5,
+      "robots_note": "robots.txtなし（HTTP 404/410）。ルールによる制限なしとして表示。",
+      "seconds": 5.26,
+      "requests": [
+        {
+          "requested": "https://example.com",
+          "final": "https://example.com",
+          "status": 200
+        },
+        {
+          "requested": "https://example.com/robots.txt",
+          "final": "https://example.com/robots.txt",
+          "status": 404
+        }
+      ]
+    },
+    {
+      "url": "http://example.com",
+      "outcome": "failed",
+      "error_type": "RemoteDisconnected",
+      "error": "ページを取得できませんでした。URLやサイトのアクセス制限を確認してください。",
+      "seconds": 1.03,
+      "requests": []
+    },
+    {
+      "url": "https://www.python.org/",
+      "outcome": "diagnosed",
+      "score": 80,
+      "checks": 9,
+      "bots": 5,
+      "robots_note": null,
+      "seconds": 0.34,
+      "requests": [
+        {
+          "requested": "https://www.python.org/",
+          "final": "https://www.python.org/",
+          "status": 200
+        },
+        {
+          "requested": "https://www.python.org/robots.txt",
+          "final": "https://www.python.org/robots.txt",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "url": "https://www.sqlite.org/index.html",
+      "outcome": "diagnosed",
+      "score": 40,
+      "checks": 9,
+      "bots": 5,
+      "robots_note": null,
+      "seconds": 0.6,
+      "requests": [
+        {
+          "requested": "https://www.sqlite.org/index.html",
+          "final": "https://www.sqlite.org/index.html",
+          "status": 200
+        },
+        {
+          "requested": "https://www.sqlite.org/robots.txt",
+          "final": "https://www.sqlite.org/robots.txt",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "url": "https://developer.mozilla.org/en-US/",
+      "outcome": "diagnosed",
+      "score": 85,
+      "checks": 9,
+      "bots": 5,
+      "robots_note": null,
+      "seconds": 0.37,
+      "requests": [
+        {
+          "requested": "https://developer.mozilla.org/en-US/",
+          "final": "https://developer.mozilla.org/en-US/",
+          "status": 200
+        },
+        {
+          "requested": "https://developer.mozilla.org/robots.txt",
+          "final": "https://developer.mozilla.org/robots.txt",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "url": "https://www.rfc-editor.org/rfc/rfc9309",
+      "outcome": "diagnosed",
+      "score": 85,
+      "checks": 9,
+      "bots": 5,
+      "robots_note": null,
+      "seconds": 0.62,
+      "requests": [
+        {
+          "requested": "https://www.rfc-editor.org/rfc/rfc9309",
+          "final": "https://www.rfc-editor.org/info/rfc9309/",
+          "status": 200
+        },
+        {
+          "requested": "https://www.rfc-editor.org/robots.txt",
+          "final": "https://www.rfc-editor.org/robots.txt",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "url": "https://www.w3.org/standards/",
+      "outcome": "diagnosed",
+      "score": 75,
+      "checks": 9,
+      "bots": 5,
+      "robots_note": null,
+      "seconds": 0.48,
+      "requests": [
+        {
+          "requested": "https://www.w3.org/standards/",
+          "final": "https://www.w3.org/standards/",
+          "status": 200
+        },
+        {
+          "requested": "https://www.w3.org/robots.txt",
+          "final": "https://www.w3.org/robots.txt",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "url": "https://www.iana.org/domains/reserved",
+      "outcome": "diagnosed",
+      "score": 60,
+      "checks": 9,
+      "bots": 5,
+      "robots_note": null,
+      "seconds": 0.62,
+      "requests": [
+        {
+          "requested": "https://www.iana.org/domains/reserved",
+          "final": "https://www.iana.org/domains/reserved",
+          "status": 200
+        },
+        {
+          "requested": "https://www.iana.org/robots.txt",
+          "final": "https://www.iana.org/robots.txt",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "url": "https://www.wikipedia.org/",
+      "outcome": "diagnosed",
+      "score": 75,
+      "checks": 9,
+      "bots": 5,
+      "robots_note": null,
+      "seconds": 0.49,
+      "requests": [
+        {
+          "requested": "https://www.wikipedia.org/",
+          "final": "https://www.wikipedia.org/",
+          "status": 200
+        },
+        {
+          "requested": "https://www.wikipedia.org/robots.txt",
+          "final": "https://en.wikipedia.org/robots.txt",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "url": "https://www.gnu.org/software/",
+      "outcome": "diagnosed",
+      "score": 55,
+      "checks": 9,
+      "bots": 5,
+      "robots_note": null,
+      "seconds": 0.84,
+      "requests": [
+        {
+          "requested": "https://www.gnu.org/software/",
+          "final": "https://www.gnu.org/software/",
+          "status": 200
+        },
+        {
+          "requested": "https://www.gnu.org/robots.txt",
+          "final": "https://www.gnu.org/robots.txt",
+          "status": 200
+        }
+      ]
+    },
+    {
+      "url": "https://www.rust-lang.org/",
+      "outcome": "diagnosed",
+      "score": 75,
+      "checks": 9,
+      "bots": 5,
+      "robots_note": "robots.txtなし（HTTP 404/410）。ルールによる制限なしとして表示。",
+      "seconds": 0.94,
+      "requests": [
+        {
+          "requested": "https://www.rust-lang.org/",
+          "final": "https://rust-lang.org/",
+          "status": 200
+        },
+        {
+          "requested": "https://rust-lang.org/robots.txt",
+          "final": "https://rust-lang.org/robots.txt",
+          "status": 404
+        }
+      ]
+    }
+  ]
+}

@@ -61,6 +61,11 @@ class AuditTests(unittest.TestCase):
     def test_passed_checks_do_not_recommend_edits(self):
         self.assertTrue(all('repair' not in c for c in app.analyze(self.page())['checks']))
 
+    def test_valueless_html_attributes_do_not_crash(self):
+        result=app.analyze(self.page('<html lang><meta name="description" content><link rel><script type></script><img alt><h1>主題</h1></html>'))
+        self.assertEqual(len(result['checks']),9)
+        self.assertFalse(next(c for c in result['checks'] if c['id']=='language')['passed'])
+
     def test_invalid_urls(self):
         for url in [None, 'file:///etc/passwd', 'https://user:pass@example.com', 'http://example.com:8080', 'https://example.com/\nfoo']:
             with self.subTest(url=url), self.assertRaises(ValueError): app.validate_url(url)
@@ -80,6 +85,17 @@ class AuditTests(unittest.TestCase):
         result = app.audit('https://example.com')
         self.assertEqual(result['bots'], [])
         self.assertIsNotNone(result['robots_error'])
+
+    @patch('app.fetch')
+    def test_http_rejections_are_not_successful_audits_or_bot_allows(self, fetch):
+        for status in [403,429,500]:
+            fetch.return_value={'status':status}
+            with self.subTest(status=status),self.assertRaises(ValueError):app.audit('https://example.com')
+            fetch.side_effect=[dict(self.page(),status=200,type='text/html'),{'status':status}]
+            result=app.audit('https://example.com')
+            self.assertEqual(result['bots'],[])
+            self.assertIn(str(status),result['robots_error'])
+            fetch.side_effect=None
 
     @patch('app.socket.getaddrinfo')
     @patch('app.http.client.HTTPConnection')

@@ -113,7 +113,7 @@ curl -X POST http://127.0.0.1:8000/api/audit/batch \
 
 未通過のチェックには `repair`（`location`・`code`・`note`）を含みます。手動確認だけの項目では `code` は `null` です。通過したチェックには `repair` を含みません。
 
-HTTP/HTTPSの標準ポートのみ対応。公開IPのみ許可し、各リダイレクト先も再検証します。検証済みIPへ接続を固定し、HTTPSの証明書は元のホスト名で検証します。レスポンス上限2MB、最大5回の転送、接続タイムアウト8秒。DNSの待ち時間はOSに依存します。直接接続のため、HTTPプロキシ必須の環境では取得できません。
+HTTP/HTTPSの標準ポートのみ対応。公開IPのみ許可し、各リダイレクト先も再検証します。検証済みIPへ接続を固定し、HTTPSの証明書は元のホスト名で検証します。レスポンス上限2MB、最大5回の転送、接続タイムアウト8秒。DNSの待ち時間はOSに依存します。環境のHTTP_PROXY / HTTPS_PROXY / NO_PROXYを利用できます。プロキシはhttp://形式のHTTP CONNECTに対応し、検証済みIPへトンネルを接続します。HTTPSのSNI・証明書検証とHostヘッダーには元のホスト名を使います。SOCKS・HTTPS形式のプロキシや、対象ポートへのCONNECTを許可しないプロキシでは取得できません。接続失敗時に別経路へ自動フォールバックしません。
 
 ## テスト
 
@@ -170,3 +170,7 @@ python3 tests/browser_report.py
 ```bash
 python3 tests/browser_batch.py
 ```
+
+## 公開サイトでの検証
+
+[実測記録](docs/public-site-validation.md)と[JSON](docs/public-site-validation.json)を保存しています。手動で再検証する場合は `python3 tools/validate_public_sites.py` を実行してください。10サイトのHTTPSページと追加のHTTP経路を対象に、ページとrobots.txtを取得します。外部への通信を伴うためCIでは実行しません。スコアは掲載・引用の評価ではなく、取得時点の独自技術チェック指標です。

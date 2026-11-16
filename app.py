@@ -15,6 +15,7 @@ from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit, urljoin
 from robots import RobotsRules
 from sitemap import parse_sitemap
+from network import connection
 
 ROOT = Path(__file__).parent
 LIMIT = 2_000_000
@@ -49,13 +50,11 @@ def fetch(url, deadline=None):
         timeout = min(8, deadline - time.monotonic())
         if timeout <= 0:
             raise TimeoutError('取得がタイムアウトしました。')
-        cls = http.client.HTTPSConnection if p.scheme == 'https' else http.client.HTTPConnection
-        conn = cls(host, port, timeout=timeout)
-        # Pin the validated address; HTTPS still validates the original hostname.
-        address = addresses[0][4][0]
-        conn._create_connection = lambda addr, timeout, source_address=None: socket.create_connection((address, port), timeout, source_address)
+        conn = connection(host, port, addresses[0][4][0], p.scheme, timeout)
+        authority = f'[{host}]' if ':' in host else host
+        if port != (443 if p.scheme == 'https' else 80): authority += f':{port}'
         try:
-            conn.request('GET', urlunsplit(('', '', p.path or '/', p.query, '')), headers={'User-Agent': 'AEO-Check/0.1', 'Accept-Encoding': 'identity'})
+            conn.request('GET', urlunsplit(('', '', p.path or '/', p.query, '')), headers={'Host': authority, 'User-Agent': 'AEO-Check/0.1', 'Accept-Encoding': 'identity'})
             r = conn.getresponse()
             if r.status in (301, 302, 303, 307, 308):
                 location = r.getheader('Location')
@@ -96,7 +95,7 @@ class Page(HTMLParser):
         self.json_data = None
 
     def handle_starttag(self, tag, attrs):
-        a = dict(attrs)
+        a = {key: value or '' for key, value in attrs}
         if tag in ('script', 'style', 'noscript', 'template'):
             self.skip += 1
         if tag == 'script' and a.get('type', '').lower() == 'application/ld+json':
