@@ -1,0 +1,13 @@
+.git
+.github
+__pycache__
+**/__pycache__
+.env
+.env.*
+.venv
+library-files
+shared
+scratch
+tests
+tools
+docs

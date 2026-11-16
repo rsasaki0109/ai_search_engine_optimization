@@ -3,9 +3,11 @@ import argparse
 import http.client
 import ipaddress
 import json
+import os
 import re
 import socket
 import time
+import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from html.parser import HTMLParser
@@ -16,11 +18,13 @@ from urllib.parse import urlsplit, urlunsplit, urljoin
 from robots import RobotsRules
 from sitemap import parse_sitemap
 from network import connection
+from limits import RuntimeLimits, CapacityError
 
 ROOT = Path(__file__).parent
 LIMIT = 2_000_000
 BOTS = ['OAI-SearchBot', 'ChatGPT-User', 'PerplexityBot', 'Googlebot', 'GPTBot']
 ANALYSIS_VERSION = '2'
+RUNTIME = RuntimeLimits()
 
 
 def reject_json_constant(value):
@@ -288,6 +292,11 @@ def analyze(page, robots=None, robots_error=None):
 
 
 def audit(url):
+    with RUNTIME.job():
+        return _audit(url)
+
+
+def _audit(url):
     deadline = time.monotonic() + 25
     page = fetch(url, deadline)
     if page['status'] != 200: raise ValueError(f'ページ取得に失敗しました（HTTP {page["status"]}）。')
@@ -319,6 +328,11 @@ def demo_audits():
 
 
 def load_sitemap(url):
+    with RUNTIME.job():
+        return _load_sitemap(url)
+
+
+def _load_sitemap(url):
     result = fetch(url)
     if result['status'] != 200:
         raise ValueError(f'サイトマップを取得できませんでした（HTTP {result["status"]}）。')
@@ -355,6 +369,36 @@ def audit_batch(urls):
         average_score=round(sum(r['score'] for r in successful) / len(successful), 1) if successful else None))
 
 
+class BetaServer(ThreadingHTTPServer):
+    """Bound inbound threads as well as outbound diagnostic jobs."""
+    daemon_threads = True
+    request_queue_size = 16
+
+    def __init__(self, *args, **kwargs):
+        self.connections = threading.BoundedSemaphore(16)
+        super().__init__(*args, **kwargs)
+
+    def process_request(self, request, client_address):
+        request.settimeout(10)
+        if not self.connections.acquire(blocking=False):
+            try:
+                request.settimeout(1)
+                data = json.dumps({'error':'接続が混み合っています。少し待って再試行してください。'}, ensure_ascii=False).encode()
+                headers = f'HTTP/1.1 503 Service Unavailable\r\nContent-Type: application/json; charset=utf-8\r\nContent-Length: {len(data)}\r\nConnection: close\r\nRetry-After: 5\r\n\r\n'.encode()
+                request.sendall(headers + data)
+            except OSError: pass
+            finally: self.shutdown_request(request)
+            return
+        try: super().process_request(request, client_address)
+        except Exception:
+            self.connections.release()
+            raise
+
+    def process_request_thread(self, request, client_address):
+        try: super().process_request_thread(request, client_address)
+        finally: self.connections.release()
+
+
 class Handler(BaseHTTPRequestHandler):
     def send(self, status, data, mime='application/json; charset=utf-8'):
         self.send_response(status)
@@ -362,10 +406,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header('Content-Length', str(len(data)))
         self.send_header('X-Content-Type-Options', 'nosniff')
         self.send_header('Cache-Control', 'no-store')
+        if status in (429, 503): self.send_header('Retry-After', '60' if status == 429 else '5')
         self.end_headers()
         self.wfile.write(data)
 
     def do_GET(self):
+        if self.path == '/healthz': return self.send(200, b'{"status":"ok"}')
         if self.path == '/api/demo':
             return self.send(200, json.dumps(demo_audits(), ensure_ascii=False).encode())
         assets = {'/demo/before': ('demo/before.html', 'text/html; charset=utf-8'), '/demo/after': ('demo/after.html', 'text/html; charset=utf-8'), '/demo.js': ('demo.js', 'text/javascript; charset=utf-8'), '/': ('index.html', 'text/html; charset=utf-8'), '/app.js': ('app.js', 'text/javascript; charset=utf-8'), '/history.js': ('history.js', 'text/javascript; charset=utf-8'), '/report.js': ('report.js', 'text/javascript; charset=utf-8'), '/batch.js': ('batch.js', 'text/javascript; charset=utf-8'), '/sitemap.js': ('sitemap.js', 'text/javascript; charset=utf-8'), '/style.css': ('style.css', 'text/css; charset=utf-8')}
@@ -376,14 +422,29 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path not in ('/api/audit', '/api/audit/batch', '/api/sitemap'): return self.send(404, b'{}')
         try:
+            origin = self.headers.get('Origin')
+            if origin and urlsplit(origin).netloc.lower() != self.headers.get('Host', '').lower():
+                return self.send(403, json.dumps({'error':'同じサイトから診断を開始してください。'}, ensure_ascii=False).encode())
+            if self.headers.get('Transfer-Encoding'):
+                return self.send(400,b'{"error":"Transfer-Encoding is unsupported"}')
             size = int(self.headers.get('Content-Length', '0'))
             limit = 16384 if self.path == '/api/audit/batch' else 4096
             if not 0 < size <= limit: raise ValueError('リクエストのサイズが不正です。')
             payload = json.loads(self.rfile.read(size))
             if not isinstance(payload, dict): raise ValueError('JSONオブジェクトが必要です。')
+            cost = 1
+            if self.path == '/api/audit/batch':
+                urls = payload.get('urls')
+                if not isinstance(urls, list) or not 1 <= len(urls) <= 5:
+                    raise ValueError('URLは1件から5件までの配列で指定してください。')
+                cost = len(urls)
+            if not RUNTIME.admit(cost):
+                return self.send(429, json.dumps({'error':'公開β版の利用上限に達しました。1分ほど待って再試行してください。'},ensure_ascii=False).encode())
             if self.path == '/api/sitemap': result = load_sitemap(payload.get('url'))
             else: result = audit_batch(payload.get('urls')) if self.path == '/api/audit/batch' else audit(payload.get('url'))
             self.send(200, json.dumps(result, ensure_ascii=False).encode())
+        except CapacityError as e:
+            self.send(503, json.dumps({'error':str(e)},ensure_ascii=False).encode())
         except (ValueError, OSError, http.client.HTTPException) as e:
             message = error_message(e)
             self.send(400, json.dumps({'error': message}, ensure_ascii=False).encode())
@@ -391,8 +452,8 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser()
-    args.add_argument('--host', default='127.0.0.1')
-    args.add_argument('--port', type=int, default=8000)
+    args.add_argument('--host', default=os.environ.get('HOST', '127.0.0.1'))
+    args.add_argument('--port', type=int, default=int(os.environ.get('PORT', '8000')))
     opts = args.parse_args()
     print(f'AEO Check: http://{opts.host}:{opts.port}', flush=True)
-    ThreadingHTTPServer((opts.host, opts.port), Handler).serve_forever()
+    BetaServer((opts.host, opts.port), Handler).serve_forever()

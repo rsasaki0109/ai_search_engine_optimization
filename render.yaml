@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: aeo-check-beta
+    runtime: docker
+    plan: free
+    numInstances: 1
+    healthCheckPath: /healthz
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: PORT
+        value: '8000'

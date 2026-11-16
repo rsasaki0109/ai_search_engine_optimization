@@ -72,5 +72,35 @@ jobs:
       - name: Batch audits and partial failures
         run: python tests/browser_batch.py
 
+      - name: Public beta HTTP limits
+        run: python tests/browser_beta.py
       - name: Before and after sample demo
         run: python tests/browser_demo.py
+
+  container:
+    name: Container smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build non-root image
+        run: docker build -t aeo-check:ci .
+      - name: Start and check health and demo
+        run: |
+          docker run -d --name aeo-check -p 127.0.0.1:8000:8000 aeo-check:ci
+          python - <<'PYTEST'
+          import json, time, urllib.request
+          for attempt in range(30):
+              try:
+                  assert json.load(urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2))['status'] == 'ok'
+                  break
+              except OSError:
+                  time.sleep(1)
+          else:
+              raise RuntimeError('Container failed to become healthy')
+          result = json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/demo', timeout=5))
+          assert result['before']['score'] == 30 and result['after']['score'] == 100
+          PYTEST
+      - name: Container logs
+        if: failure()
+        run: docker logs aeo-check
