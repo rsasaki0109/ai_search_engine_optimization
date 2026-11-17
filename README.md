@@ -218,3 +218,7 @@ docker run --rm -p 8000:8000 aeo-check
 [RenderでBlueprintを作成](https://dashboard.render.com/blueprint/new?repo=https://github.com/rsasaki0109/ai_search_engine_optimization)して、GitHubリポジトリへのアクセスを承認するとデプロイ設定を読み込めます。公開URLの発行はRenderアカウントとの接続・デプロイ成功後です。リポジトリに秘密情報を保存する必要はありません。公開後は `/healthz`、サンプル比較、実サイト1件、一括診断、429時の案内を確認してください。
 
 CIでは単体テスト・HTTP制限の統合テスト・ブラウザ検証に加え、Dockerイメージをビルドし、ヘルスチェックとサンプル診断をコンテナ内で実行します。
+
+## 自分のOSSでの改善事例
+
+[lidar_slam_ros2の診断・修正・公開後再診断](docs/case-studies/lidar-slam-ros2.md)を記録しました。4ページの独自技術チェックは85→100点。JSON-LD追加による判定上の変化であり、AI検索の引用率や掲載効果を測定した値ではありません。

@@ -1,0 +1,148 @@
+{
+  "repository": "rsasaki0109/lidar_slam_ros2",
+  "pull_request": "https://github.com/rsasaki0109/lidar_slam_ros2/pull/616",
+  "checked_at": "2026-11-17T20:50:59.041317+09:00",
+  "merge_sha": "ee497c0993d259d21034409bb94f01713766f4ea",
+  "analysis_version": "2",
+  "score_scope": "Technical checklist only; the 15-point increase is the JSON-LD criterion. AI citations and search ranking were not measured.",
+  "pages": [
+    {
+      "page": "index.html",
+      "baseline": {
+        "scope": "published_page",
+        "score": 85
+      },
+      "published": {
+        "url": "https://rsasaki0109.github.io/lidar_slam_ros2/index.html",
+        "score": 100,
+        "title": "ROS 2 LiDAR SLAM and Autoware map authoring - lidarslam_ros2 Docs",
+        "description": "Create Autoware-compatible pointcloud maps from LiDAR bags with RKO-LIO and graph_based_slam. Choose a Docker demo, your own bag, or a ROS 2 source build.",
+        "canonical": "https://rsasaki0109.github.io/lidar_slam_ros2/index.html",
+        "schema": [
+          {
+            "block": 1,
+            "types": [
+              "WebPage",
+              "WebSite"
+            ],
+            "issues": [],
+            "passed": true
+          }
+        ],
+        "robots_note": "robots.txtなし（HTTP 404/410）。ルールによる制限なしとして表示。"
+      }
+    },
+    {
+      "page": "getting-started.html",
+      "baseline": {
+        "scope": "published_page",
+        "score": 85
+      },
+      "published": {
+        "url": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started.html",
+        "score": 100,
+        "title": "Getting started with ROS 2 LiDAR SLAM - lidarslam_ros2 Docs",
+        "description": "Run the lidar_slam_ros2 Docker demo or build for ROS 2 Humble or Jazzy. Check your rosbag2 topics and calibration, then create and verify a pointcloud map.",
+        "canonical": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started.html",
+        "schema": [
+          {
+            "block": 1,
+            "types": [
+              "WebPage",
+              "WebSite"
+            ],
+            "issues": [],
+            "passed": true
+          }
+        ],
+        "robots_note": "robots.txtなし（HTTP 404/410）。ルールによる制限なしとして表示。"
+      }
+    },
+    {
+      "page": "getting-started-ja.html",
+      "baseline": {
+        "scope": "local_pre_change_build",
+        "score": 85
+      },
+      "published": {
+        "url": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started-ja.html",
+        "score": 100,
+        "title": "日本語クイックスタート - lidarslam_ros2 Docs",
+        "description": "ROS 2 LiDAR SLAMでAutoware互換の点群地図を作る日本語ガイド。Dockerの固定デモ、Humble/Jazzyのsource構築、自分のrosbag2の確認と地図作成へ案内します。",
+        "canonical": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started-ja.html",
+        "schema": [
+          {
+            "block": 1,
+            "types": [
+              "WebPage",
+              "WebSite"
+            ],
+            "issues": [],
+            "passed": true
+          }
+        ],
+        "robots_note": "robots.txtなし（HTTP 404/410）。ルールによる制限なしとして表示。"
+      }
+    },
+    {
+      "page": "comparison.html",
+      "baseline": {
+        "scope": "published_page",
+        "score": 85
+      },
+      "published": {
+        "url": "https://rsasaki0109.github.io/lidar_slam_ros2/comparison.html",
+        "score": 100,
+        "title": "LiDAR SLAM workflow and benchmark comparison - lidarslam_ros2 Docs",
+        "description": "Compare lidar_slam_ros2 map-authoring workflows, default-path licenses, and scoped benchmark evidence. Review datasets, metrics, reference types, and reproduction steps.",
+        "canonical": "https://rsasaki0109.github.io/lidar_slam_ros2/comparison.html",
+        "schema": [
+          {
+            "block": 1,
+            "types": [
+              "WebPage",
+              "WebSite"
+            ],
+            "issues": [],
+            "passed": true
+          }
+        ],
+        "robots_note": "robots.txtなし（HTTP 404/410）。ルールによる制限なしとして表示。"
+      }
+    }
+  ],
+  "published_getting_started_provenance": {
+    "checks": {
+      "content_markers_present": true,
+      "manifest_content_contract_valid": true,
+      "manifest_route_contract_valid": true,
+      "manifest_schema_valid": true,
+      "page_sha256_matches": true,
+      "page_size_matches": true,
+      "product_version_matches": true,
+      "route_fragment_present": true,
+      "source_revision_matches": true
+    },
+    "detail": "public documentation bytes, routes, and first-map handoff content match the exact source revision",
+    "expectations": {
+      "product_version": "0.13.0",
+      "route_id": "source-quickstart",
+      "source_revision": "ee497c0993d259d21034409bb94f01713766f4ea"
+    },
+    "finding_codes": [],
+    "manifest_url": "https://rsasaki0109.github.io/lidar_slam_ros2/docs-deployment-v1.json",
+    "network_requested": true,
+    "observed": {
+      "page_sha256": "e9183b8f91c4f8dfbd26e1fbee3297b95ba0c6c4294f31ec484ebc0c5a59e681",
+      "page_size_bytes": 143438,
+      "page_url": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started.html",
+      "product_version": "0.13.0",
+      "source_revision": "ee497c0993d259d21034409bb94f01713766f4ea"
+    },
+    "repository": "rsasaki0109/lidar_slam_ros2",
+    "schema_uri": "https://rsasaki0109.github.io/lidar_slam_ros2/schemas/docs-deployment-audit-v1.schema.json",
+    "schema_version": 1,
+    "status": "VERIFIED",
+    "writes_performed": false
+  }
+}
