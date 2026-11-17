@@ -39,6 +39,8 @@ jobs:
           node --check static/batch.js
           node --check static/sitemap.js
           node --check static/demo.js
+          node --check pages/pages.js
+          node --check pages/analysis-worker.js
       - name: History and report tests
         run: |
           node tests/history.test.cjs
@@ -72,6 +74,10 @@ jobs:
       - name: Batch audits and partial failures
         run: python tests/browser_batch.py
 
+      - name: Build and test GitHub Pages
+        run: |
+          python tools/build_pages.py
+          python tests/browser_pages.py
       - name: Public beta HTTP limits
         run: python tests/browser_beta.py
       - name: Before and after sample demo

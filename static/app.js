@@ -177,7 +177,10 @@ function renderHistory() {
       $('status').className = '';
     });
     const retry = el('button', '再診断', 'secondary'); retry.type = 'button'; retry.disabled = busy;
-    retry.addEventListener('click', () => { $('url').value = entry.report.url; $('audit-form').requestSubmit(); });
+    if (window.AEO_PAGES) {
+      retry.textContent = 'HTMLを選び直す';
+      retry.addEventListener('click', () => { $('pages-url').value = entry.report.url; $('pages-html').focus(); $('pages-html').click(); });
+    } else retry.addEventListener('click', () => { $('url').value = entry.report.url; $('audit-form').requestSubmit(); });
     actions.append(open, retry); row.append(content, actions); $('history-list').append(row);
   });
 }

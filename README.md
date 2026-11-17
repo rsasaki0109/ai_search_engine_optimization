@@ -1,5 +1,7 @@
 # AEO Check
 
+**[GitHub Pages版](https://rsasaki0109.github.io/ai_search_engine_optimization/)** · 保存HTMLを端末内で診断（Pages有効化後に利用可能）
+
 [![CI](https://github.com/rsasaki0109/ai_search_engine_optimization/actions/workflows/ci.yml/badge.svg)](https://github.com/rsasaki0109/ai_search_engine_optimization/actions/workflows/ci.yml)
 
 ![AEO Checkの操作デモ：URL入力から技術診断、スコアと優先順位つき改善案の確認まで](docs/hero.gif)
@@ -12,6 +14,30 @@ URLから、AI検索に向けたページの技術設定を診断するMVP。Pyt
 python3 app.py
 # http://127.0.0.1:8000
 ```
+
+## GitHub Pages（github.io）で使う
+
+Renderの接続なしで使える静的配信版を追加しました。保存したUTF-8のHTML（2MBまで）と元のURLを指定すると、既存と同じPython解析ロジックをブラウザ内のPyodide 0.27.7で実行します。robots.txtは任意で指定できます（500KiBまで）。ファイルはサーバーへ送信せず、HTML内のJavaScriptも実行しません。履歴・前回比較・修正コード・JSON/Markdown・印刷/PDF・バックアップを利用できます。
+
+GitHub PagesではPythonサーバーを動かせないため、URLからの自動取得・URL一括取得・サイトマップの取得は行いません。HTTPヘッダーも確認できないため、インデックス設定はHTML内だけの判定です。判定基準に `-html-file` を付け、サーバー取得版の履歴とはスコア比較しません。robots.txt未指定時のボット判定は不明として表示します。サンプル比較はPython実行環境の準備なしで利用できます。
+
+最初の実ファイル診断時には、固定バージョンのPython実行環境をjsDelivr CDNから読み込みます。インターネット接続が必要で、初回は読み込み時間がかかります。ファイルの解析はWeb Worker内で行い、長時間応答がない場合はタイムアウトを表示します。画像・外部スクリプト・リンク先の内容は読み込みません。
+
+### 公開設定（リポジトリ所有者の初回操作）
+
+1. [Settings → Pages](https://github.com/rsasaki0109/ai_search_engine_optimization/settings/pages) を開く。
+2. Build and deployment の Source を **GitHub Actions** に設定。
+3. [GitHub Pagesワークフロー](https://github.com/rsasaki0109/ai_search_engine_optimization/actions/workflows/pages.yml)を **Run workflow** で実行。
+
+以後はmainへのpushでビルド・公開します。公開先は https://rsasaki0109.github.io/ai_search_engine_optimization/ です。現在の連携ではPages設定の作成APIが403になるため、初回有効化だけは所有者の操作が必要です。未有効化時もビルド成果物を保存し、公開ジョブは実行しません。
+
+```bash
+python3 tools/build_pages.py
+python3 -m http.server 8000 --directory dist-pages
+# http://127.0.0.1:8000/
+```
+
+`tools/build_pages.py` はPythonの純粋な解析関数をASTから抽出し、サンプル結果・既存UIと一緒に `dist-pages/` を生成します。診断ロジックをJavaScriptへ二重実装していません。動作検証は `python3 tests/browser_pages.py` でプロジェクト用サブパス配信を再現します。
 
 ## URLなしで試す
 
