@@ -1,0 +1,52 @@
+{
+  "observed_date": "2026-11-18",
+  "time_zone": "Asia/Tokyo",
+  "method": "Four individually submitted queries to the available web search tool. Counts describe returned items, not SERP ranks. One observation only; no AI answer citation measurement or before/after attribution.",
+  "queries": [
+    {
+      "query": "LiDAR SLAM offline mapping without ROS 2 Python pip rosbag",
+      "returned_result_count": 33,
+      "owned_urls": [],
+      "third_party_project_mentions": [
+        "https://airanks.app/repo/rsasaki0109/lidar_slam_ros2"
+      ]
+    },
+    {
+      "query": "ROS 2 LiDAR SLAM Autoware compatible pointcloud map open source",
+      "returned_result_count": 39,
+      "owned_urls": [
+        "https://github.com/rsasaki0109/lidar_slam_ros2",
+        "https://github.com/rsasaki0109/lidar_slam_ros2/releases"
+      ],
+      "third_party_project_mentions": []
+    },
+    {
+      "query": "lidar_slam ROS 1 MCAP SQLite3 RKO-LIO",
+      "returned_result_count": 35,
+      "owned_urls": [
+        "https://rsasaki0109.github.io/lidar_slam_ros2/evidence/official-rko-binary-compatibility-2026-10-23.html",
+        "https://rsasaki0109.github.io/lidar_slam_ros2/distribution.html"
+      ],
+      "third_party_project_mentions": [
+        "https://airanks.app/repo/rsasaki0109/lidar_slam_ros2"
+      ]
+    },
+    {
+      "query": "ROS 2 LiDAR SLAM accuracy comparison GLIM RKO-LIO",
+      "returned_result_count": 34,
+      "owned_urls": [
+        "https://github.com/rsasaki0109/lidar_slam_ros2",
+        "https://rsasaki0109.github.io/lidar_slam_ros2/readme-media.html",
+        "https://github.com/rsasaki0109/lidar_slam_ros2/blob/develop/README.md",
+        "https://github.com/rsasaki0109/lidar_slam_ros2/releases"
+      ],
+      "third_party_project_mentions": [
+        "https://airanks.app/repo/rsasaki0109/lidar_slam_ros2",
+        "https://ithub.global.ssl.fastly.net/rsasaki0109/lidar_slam_ros2"
+      ]
+    }
+  ],
+  "landing_check_file": "2026-11-18-search-landings.json",
+  "remediation_pull_request": "https://github.com/rsasaki0109/rsasaki0109.github.io/pull/1",
+  "remediation_status": "Open PR; local tests passed. Public legacy path recovery not yet verified."
+}

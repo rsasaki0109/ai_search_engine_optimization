@@ -1,0 +1,22 @@
+[
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam_ros2/readme-media.html",
+    "status": 404,
+    "final": "https://rsasaki0109.github.io/lidar_slam_ros2/readme-media.html"
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started.html",
+    "status": 404,
+    "final": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started.html"
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/readme-media.html",
+    "status": 200,
+    "final": "https://rsasaki0109.github.io/lidar_slam/readme-media.html"
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/sitemap.xml",
+    "status": 200,
+    "final": "https://rsasaki0109.github.io/lidar_slam/sitemap.xml"
+  }
+]

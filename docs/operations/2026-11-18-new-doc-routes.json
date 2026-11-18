@@ -1,0 +1,54 @@
+[
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/index.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/getting-started.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/getting-started-ja.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/comparison.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/readme-media.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/distribution.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/product-contract.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/graph-slam-architecture.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/graph-slam-parameters.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/real-data-e2e.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/degeneracy-guide.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/evidence/official-rko-binary-compatibility-2026-10-23.html",
+    "status": 200
+  },
+  {
+    "url": "https://rsasaki0109.github.io/lidar_slam/evidence/install-upgrade-2026-07-28.html",
+    "status": 200
+  }
+]
