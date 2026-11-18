@@ -39,11 +39,24 @@ def main():
                 with page.expect_download() as captured:page.locator('#download').click()
                 report=json.loads(Path(captured.value.path()).read_text())
                 assert report['source_mode']=='html-file'
+                assert report['source_files']['html']['name']=='after.html'
+                assert len(report['source_files']['html']['sha256'])==64
+                expect(page.locator('#source-files')).to_contain_text('after.html')
+                expect(page.locator('#source-files')).to_contain_text('HTTPヘッダー')
                 page.locator('#pages-html').set_input_files(str(ROOT/'static/demo/before.html'))
                 page.locator('#pages-robots').set_input_files({'name':'robots.txt','mimeType':'text/plain','buffer':b'User-agent: *\nDisallow: /'})
                 page.locator('#pages-submit').click()
                 expect(page.locator('#comparison')).to_contain_text('-70 点',timeout=30000)
                 expect(page.locator('.bot').first).to_contain_text('制限')
+                page.locator('#pages-url').fill('https://other.example/guide')
+                assert page.locator('#pages-robots').evaluate('(n)=>n.files.length')==0
+                expect(page.locator('#pages-input-note')).to_contain_text('サイトが変わった')
+                for name,mime in [('report.json','application/json'),('report.html','text/html')]:
+                    page.locator('#pages-html').set_input_files({'name':name,'mimeType':mime,'buffer':json.dumps(report).encode()})
+                    page.locator('#pages-submit').click()
+                    expect(page.locator('#pages-status')).not_to_contain_text('端末内の診断が完了')
+                    expect(page.locator('#pages-submit')).to_be_enabled()
+                    expect(page.locator('.history-row')).to_have_count(2)
                 page.reload()
                 expect(page.locator('.history-row')).to_have_count(2)
                 page.locator('.history-row').first.get_by_role('button',name='結果を見る',exact=True).click()

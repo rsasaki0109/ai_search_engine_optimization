@@ -22,7 +22,9 @@ result['source_mode']='html-file'
 result['analysis_version']+='-html-file'
 result['note']='保存HTMLを端末内で診断しています。URLからの取得・HTTPヘッダー・実際のアクセス可否は未確認です。'+result['note']
 for check in result['checks']:
- if check['id']=='index': check['evidence']+='（HTML内のみ。HTTPヘッダー未確認）'
+ if check['id']=='index':
+  check['label']='HTML内のインデックス指定'
+  check['evidence']+='（HTML内のみ。HTTPヘッダー未確認）'
 json.dumps(result,ensure_ascii=False)`);
     self.postMessage({result:JSON.parse(output)});
   } catch(error) { self.postMessage({error:String(error.message || error)}); }

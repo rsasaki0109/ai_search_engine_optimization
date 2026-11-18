@@ -39,11 +39,13 @@ jobs:
           node --check static/batch.js
           node --check static/sitemap.js
           node --check static/demo.js
+          node --check pages/file-input.js
           node --check pages/pages.js
           node --check pages/analysis-worker.js
       - name: History and report tests
         run: |
           node tests/history.test.cjs
+          node tests/file-input.test.cjs
           node tests/report.test.cjs
 
   browser:

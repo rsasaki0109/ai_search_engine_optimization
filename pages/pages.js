@@ -15,8 +15,27 @@ function analyzeFile(data) {
     analysisWorker.postMessage(data);
   });
 }
+let robotsOrigin=null;
+function syncRobotsOrigin() {
+  const current=AEOFileInput.origin($('pages-url').value);
+  if ($('pages-robots').files.length && current !== robotsOrigin) {
+    $('pages-robots').value='';
+    $('pages-input-note').textContent='サイトが変わったため、前のrobots.txtを解除しました。必要ならこのサイトのファイルを選び直してください。';
+    robotsOrigin=null;
+  }
+}
+$('pages-url').addEventListener('input',syncRobotsOrigin);
+$('pages-robots').addEventListener('change',()=>{
+  robotsOrigin=AEOFileInput.origin($('pages-url').value);
+  $('pages-input-note').textContent='';
+});
+async function fileIdentity(file) {
+  const digest=await crypto.subtle.digest('SHA-256',await file.arrayBuffer());
+  return {name:file.name,size:file.size,sha256:[...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('')};
+}
 $('pages-form').addEventListener('submit',async event=> {
   event.preventDefault();if(busy)return;
+  syncRobotsOrigin();
   const html=$('pages-html').files[0],robots=$('pages-robots').files[0];
   if(!html)return;
   setBusy(true);$('pages-submit').disabled=true;
@@ -24,7 +43,10 @@ $('pages-form').addEventListener('submit',async event=> {
   try {
     if(html.size>2000000)throw new Error('HTMLの上限（2MB）を超えています。');
     if(robots && robots.size>512000)throw new Error('robots.txtの上限（500KiB）を超えています。');
-    const report=await analyzeFile({url:$('pages-url').value.trim(),html:await html.text(),robots:robots?await robots.text():null});
+    const body=await html.text();
+    AEOFileInput.validateHtml(html.name,html.type,body);
+    const report=await analyzeFile({url:$('pages-url').value.trim(),html:body,robots:robots?await robots.text():null});
+    report.source_files={html:await fileIdentity(html),robots:robots?await fileIdentity(robots):null};
     const at=new Date().toISOString();const prior=rememberAudit(report,at);
     renderReport(report,prior,at);$('pages-status').textContent='端末内の診断が完了しました。ファイルは送信していません。';
   } catch(error){$('pages-status').textContent=error.message;}

@@ -82,3 +82,10 @@ test('merges newest ten while retaining existing duplicate records', () => {
   assert.equal(merged[0],current);
   assert.equal(merged.at(-1).at,'2026-11-02T00:00:00Z');
 });
+test('validates optional input-file identities and keeps old reports readable',()=>{
+  const r=report();r.source_files={html:{name:'page.html',size:100,sha256:'a'.repeat(64)},robots:null};
+  assert.equal(history.validReport(r),true);
+  r.source_files.html.sha256='not a digest';
+  assert.equal(history.read(JSON.stringify([entry(r)])).length,0);
+  delete r.source_files;assert.equal(history.validReport(r),true);
+});

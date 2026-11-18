@@ -83,6 +83,9 @@ function renderReport(data, prior, at) {
   $('page-title').textContent = data.title || 'タイトル未設定';
   $('page-url').textContent = data.url;
   $('score').textContent = data.score;
+  const files=data.source_files;
+  $('source-files').hidden=data.source_mode!=='html-file';
+  $('source-files').textContent=data.source_mode==='html-file' ? `確認範囲：保存HTMLのみ。HTTPヘッダー・実際の取得可否は未確認。HTML：${files?.html?.name || 'ファイル情報なし（以前の履歴）'}。robots.txt：${files?.robots?.name || '未提供・判定不明'}。` : '';
   $('disclaimer').textContent = data.note;
   $('check-count').textContent = `${data.checks.filter(c => c.passed).length} / ${data.checks.length} 項目を通過`;
   $('recommendations').replaceChildren();
@@ -179,7 +182,7 @@ function renderHistory() {
     const retry = el('button', '再診断', 'secondary'); retry.type = 'button'; retry.disabled = busy;
     if (window.AEO_PAGES) {
       retry.textContent = 'HTMLを選び直す';
-      retry.addEventListener('click', () => { $('pages-url').value = entry.report.url; $('pages-html').focus(); $('pages-html').click(); });
+      retry.addEventListener('click', () => { $('pages-url').value = entry.report.url; $('pages-url').dispatchEvent(new Event('input')); $('pages-html').focus(); $('pages-html').click(); });
     } else retry.addEventListener('click', () => { $('url').value = entry.report.url; $('audit-form').requestSubmit(); });
     actions.append(open, retry); row.append(content, actions); $('history-list').append(row);
   });

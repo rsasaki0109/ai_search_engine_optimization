@@ -62,3 +62,11 @@ test('exports crawler group and matched rule with line number', () => {
   assert.ok(md.includes('適用グループ'));
   assert.ok(md.includes('Disallow: /private/\\*$（3行目）'));
 });
+test('HTML-file reports identify files and unverified coverage',()=>{
+  const r=report();r.source_mode='html-file';r.source_files={html:{name:'source.html',size:123,sha256:'abc123'},robots:null};
+  const md=markdown(r,options);
+  assert.ok(md.includes('診断に使用したファイル'));
+  assert.ok(md.includes('123 bytes / SHA256: abc123'));
+  assert.ok(md.includes('HTTPヘッダー・実際の取得可否は未確認'));
+  assert.ok(md.includes('robots.txt: 未提供・判定不明'));
+});

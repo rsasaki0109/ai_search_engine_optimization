@@ -5,12 +5,16 @@
   function urlKey(value) {
     const url = new URL(value); url.hash = ''; return url.href;
   }
+  function validFile(file) {
+    return file && typeof file.name==='string' && Number.isInteger(file.size) && file.size>=0 && typeof file.sha256==='string' && /^[a-f0-9]{64}$/.test(file.sha256);
+  }
   function validReport(r) {
     try {
       const url = new URL(r.url);
       if (!['http:', 'https:'].includes(url.protocol) || !url.hostname) return false;
     } catch { return false; }
     return r && typeof r.url === 'string' && /^https?:\/\//.test(r.url) &&
+      (r.source_files === undefined || (r.source_files && validFile(r.source_files.html) && (r.source_files.robots===null || validFile(r.source_files.robots)))) &&
       (r.analysis_version === undefined || typeof r.analysis_version === 'string') &&
       (r.schema_details === undefined || (Array.isArray(r.schema_details) && r.schema_details.every(item =>
         item && Number.isInteger(item.block) && typeof item.passed === 'boolean' &&

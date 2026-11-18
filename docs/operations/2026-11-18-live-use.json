@@ -1,0 +1,13 @@
+{
+  "first_analysis_seconds": 3.9,
+  "retained_robots_after_other_site": "gnu-robots.txt",
+  "file_source_metadata": {
+    "source_mode": "html-file",
+    "source_file": null,
+    "robots_file": null
+  },
+  "wrong_file_status": "端末内の診断が完了しました。ファイルは送信していません。",
+  "page_errors": [],
+  "scope": "Single-operator walkthrough of the deployed Pages edition using saved public GNU and lidar_slam HTML and GNU robots.txt; not a user study or AI search measurement.",
+  "observed_wrong_cross_site_decision": "All five bots displayed as allowed on the lidar_slam page using the retained GNU rules; the matching robots.txt for lidar_slam was not supplied."
+}

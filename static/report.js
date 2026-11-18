@@ -14,6 +14,14 @@
     const lines = ['# AEO Check 診断レポート', '', `**${text(report.title || 'タイトル未設定')}**`, '',
       `- URL: ${text(report.url)}`, `- 診断日時: ${text(at || '不明')}`, `- レポート出力日時: ${text(generatedAt)}`,
       `- 技術チェックスコア: **${report.score} / 100**`, `- 判定基準バージョン: ${text(report.analysis_version || '1')}`, '', text(report.note), ''];
+    if (report.source_mode==='html-file') {
+      lines.push('## 診断に使用したファイル', '', '保存HTMLのみの診断です。HTTPヘッダー・実際の取得可否は未確認です。', '');
+      for (const [label,file] of [['HTML',report.source_files?.html],['robots.txt',report.source_files?.robots]]) {
+        if (file) lines.push(`- ${label}: ${text(file.name)} / ${file.size} bytes / SHA256: ${text(file.sha256)}`);
+        else lines.push(`- ${label}: ${label==='HTML' ? 'ファイル情報なし（以前の履歴）' : '未提供・判定不明'}`);
+      }
+      lines.push('');
+    }
     const diff = history.compare(report, prior);
     if (diff) {
       lines.push('## 前回との比較', '', `比較対象: ${text(prior.at)}`, '');
