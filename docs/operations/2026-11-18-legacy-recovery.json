@@ -1,0 +1,124 @@
+{
+  "checked_at": "2026-11-18T11:25:31.061821+09:00",
+  "merge_commit": "e0a1c3b76d6f90f6413df47752f5db9229487043",
+  "http_pages": [
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/index.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/index.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/index.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/getting-started.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started-ja.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/getting-started-ja.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/getting-started-ja.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/comparison.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/comparison.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/comparison.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/readme-media.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/readme-media.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/readme-media.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/distribution.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/distribution.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/distribution.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/product-contract.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/product-contract.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/product-contract.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/graph-slam-architecture.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/graph-slam-architecture.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/graph-slam-architecture.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/graph-slam-parameters.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/graph-slam-parameters.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/graph-slam-parameters.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/real-data-e2e.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/real-data-e2e.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/real-data-e2e.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/degeneracy-guide.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/degeneracy-guide.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/degeneracy-guide.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/evidence/official-rko-binary-compatibility-2026-10-23.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/evidence/official-rko-binary-compatibility-2026-10-23.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/evidence/official-rko-binary-compatibility-2026-10-23.html",
+      "manual_link_present": true
+    },
+    {
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/evidence/install-upgrade-2026-07-28.html",
+      "status": 200,
+      "final_http_url": "https://rsasaki0109.github.io/lidar_slam_ros2/evidence/install-upgrade-2026-07-28.html",
+      "canonical": "https://rsasaki0109.github.io/lidar_slam/evidence/install-upgrade-2026-07-28.html",
+      "manual_link_present": true
+    }
+  ],
+  "browser_flows": [
+    {
+      "javascript_enabled": true,
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/readme-media.html?source=legacy-check#verification",
+      "landed_url": "https://rsasaki0109.github.io/lidar_slam/readme-media.html?source=legacy-check#verification",
+      "title": "README media - lidar_slam Docs"
+    },
+    {
+      "javascript_enabled": true,
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/evidence/official-rko-binary-compatibility-2026-10-23.html?source=legacy-check#verification",
+      "landed_url": "https://rsasaki0109.github.io/lidar_slam/evidence/official-rko-binary-compatibility-2026-10-23.html?source=legacy-check#verification",
+      "title": "Official RKO-LIO binary compatibility \u2014 2026-10-23 - lidar_slam Docs"
+    },
+    {
+      "javascript_enabled": false,
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/readme-media.html?source=legacy-check#verification",
+      "landed_url": "https://rsasaki0109.github.io/lidar_slam/readme-media.html",
+      "title": "README media - lidar_slam Docs"
+    },
+    {
+      "javascript_enabled": false,
+      "old_url": "https://rsasaki0109.github.io/lidar_slam_ros2/evidence/official-rko-binary-compatibility-2026-10-23.html?source=legacy-check#verification",
+      "landed_url": "https://rsasaki0109.github.io/lidar_slam/evidence/official-rko-binary-compatibility-2026-10-23.html",
+      "title": "Official RKO-LIO binary compatibility \u2014 2026-10-23 - lidar_slam Docs"
+    }
+  ],
+  "limitations": "Static compatibility HTML, not HTTP 301. JavaScript navigation preserves query/fragment. No-JavaScript fallback does not. Search ranking and AI citation effects are unmeasured."
+}

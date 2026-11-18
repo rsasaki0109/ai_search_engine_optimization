@@ -48,5 +48,11 @@
   ],
   "landing_check_file": "2026-11-18-search-landings.json",
   "remediation_pull_request": "https://github.com/rsasaki0109/rsasaki0109.github.io/pull/1",
-  "remediation_status": "Open PR; local tests passed. Public legacy path recovery not yet verified."
+  "remediation_status": "PRs #1 and #2 merged. Both Pages deployments succeeded for e0a1c3b76d6f90f6413df47752f5db9229487043. Public HTTP checks passed for all 13 legacy pages; Chromium verified four actual navigation flows.",
+  "remediation_followup_pull_request": "https://github.com/rsasaki0109/rsasaki0109.github.io/pull/2",
+  "public_recovery_check_file": "2026-11-18-legacy-recovery.json",
+  "deployment_runs": [
+    "https://github.com/rsasaki0109/rsasaki0109.github.io/actions/runs/44223019295",
+    "https://github.com/rsasaki0109/rsasaki0109.github.io/actions/runs/44223019259"
+  ]
 }
