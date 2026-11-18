@@ -1,0 +1,22 @@
+{
+  "first_analysis_seconds": 3.89,
+  "retained_robots_after_other_site": null,
+  "second_bots": [],
+  "file_source_metadata": {
+    "source_mode": "html-file",
+    "source_files": {
+      "html": {
+        "name": "lidar.html",
+        "size": 75376,
+        "sha256": "0910f43985030bd3f7ece1e1ce5484cd2abdee5d6cbe2e1f17c5df3efbda2ba4"
+      },
+      "robots": null
+    }
+  },
+  "wrong_file_status": "HTMLファイル（.html / .htm）を選択してください。診断JSONではなく、対象ページのHTMLを選び直してください。",
+  "page_errors": [],
+  "checked_at": "2026-11-18T09:47:57.634960+09:00",
+  "published_fix_commit": "cd2b46bf46789909b7744a67b76c5b8cd1d6103a",
+  "pages_workflow": "https://github.com/rsasaki0109/ai_search_engine_optimization/actions/runs/44210489954",
+  "ci_workflow": "https://github.com/rsasaki0109/ai_search_engine_optimization/actions/runs/44210489996"
+}
